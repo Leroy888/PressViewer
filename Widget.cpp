@@ -101,12 +101,16 @@ void Widget::onReciveData()
     {
         for(int i=0; i<9; ++i)
         {
+            if(1 == i || 5 == i)
+                continue;
             int sum = 0;
             for(int j= 0; j<12; j+=2)
             {
                 sum += getValue(strData[i*13 + j], strData[i*13 + j+1]);
             }
             m_valueMap.insert(i, sum / 12);
+            if(2 == i)
+                m_valueMap.insert(1, sum / 12);
         }
         update();
     }
@@ -129,8 +133,11 @@ void Widget::paintEvent(QPaintEvent *event)
     // painter.drawEllipse(ui->label->pos().x(), ui->label->pos().y(), ui->label->width(), ui->label->height()); // 绘制椭圆，填充渐变色
 
     painter.drawImage(ui->label->geometry(), QImage(":/images/images/chair.png"));
-    for(const QRect& rect : m_areaMap)
+
+    for(QMap<int, QRect>::iterator it = m_areaMap.begin(); it != m_areaMap.end(); ++it)
     {
+        QRect rect = it.value();
+        int key = it.key();
          static bool bFirst = true;
          QRect rct = ui->label->geometry();
          if(bFirst)
@@ -148,13 +155,27 @@ void Widget::paintEvent(QPaintEvent *event)
         radialGrad.setColorAt(0.4, QColor(163, 126, 220)); // 设置起始颜色为黄色
         radialGrad.setColorAt(0.6, QColor(182, 175, 220)); // 设置起始颜色为黄色
         radialGrad.setColorAt(0.8, QColor(255, 220, 220)); // 设置起始颜色为黄色
-
         radialGrad.setColorAt(1.0, Qt::white); // 设置结束颜色为绿色
+
+        int value = m_valueMap.value(key);
+        int level = getColorLevel(value);
+        float step = 1.0 / (m_valueMap.size() - level);
+        radialGrad.setColorAt(0.0, m_colorMap.value(level));
+        for(int i=level; i < m_valueMap.size(); i++)
+        {
+            radialGrad.setColorAt(i*step, m_colorMap.value(i));
+        }
+
         painter.setBrush(radialGrad); // 设置画笔的填充颜色为渐变
         painter.setPen(Qt::NoPen); // 不绘制边框
         painter.drawEllipse(rect); // 绘制椭圆，填充渐变色
     }
 
+}
+
+void Widget::resizeEvent(QResizeEvent *e)
+{
+    initData();
 }
 
 void Widget::initData()
@@ -166,28 +187,64 @@ void Widget::initData()
     m_areaMap.insert(0, rect);
     rect = QRect((ui->label->geometry().x() +  ui->label->width() * 0.49) ,
                  ui->label->height() * 0.5, 100 / m_scale, 180 / m_scale);
-    m_areaMap.insert(1, rect);
+    m_areaMap.insert(3, rect);
     rect = QRect((ui->label->geometry().x() +  ui->label->width() * 0.37) ,
                  (ui->label->geometry().y() +  ui->label->height() * 0.37), 50 / m_scale, 230 / m_scale);
-    m_areaMap.insert(2, rect);
+    m_areaMap.insert(5, rect);
     rect = QRect((ui->label->geometry().x() +  ui->label->width() * 0.67) ,
                  (ui->label->geometry().y() +  ui->label->height() * 0.37), 50 / m_scale, 230 / m_scale);
-    m_areaMap.insert(3, rect);
+    m_areaMap.insert(6, rect);
     rect = QRect((ui->label->geometry().x() +  ui->label->width() * 0.41) ,
                  (ui->label->geometry().y() +  ui->label->height() * 0.6), 100 / m_scale, 150 / m_scale);
-    m_areaMap.insert(4, rect);
+    m_areaMap.insert(7, rect);
     rect = QRect((ui->label->geometry().x() +  ui->label->width() * 0.57) ,
                  (ui->label->geometry().y() +  ui->label->height() * 0.6), 100 / m_scale, 150 / m_scale);
-    m_areaMap.insert(5, rect);
+    m_areaMap.insert(8, rect);
     rect = QRect((ui->label->geometry().x() +  ui->label->width() * 0.37) ,
                  (ui->label->geometry().y() +  ui->label->height() * 0.72), 100 / m_scale, 140 / m_scale);
-    m_areaMap.insert(6, rect);
+    m_areaMap.insert(1, rect);
     rect = QRect((ui->label->geometry().x() +  ui->label->width() * 0.60) ,
                  (ui->label->geometry().y() +  ui->label->height() * 0.72), 100 / m_scale, 140 / m_scale);
-    m_areaMap.insert(7, rect);
+    m_areaMap.insert(2, rect);
 
     qDebug()<<m_areaMap[0];
     qDebug()<<"label width="<<ui->label->width()<<"  x="<<ui->label->geometry().x();
+}
+
+void Widget::initColorData()
+{
+    m_colorMap.insert(0, QColor());
+    m_colorMap.insert(1, QColor());
+    m_colorMap.insert(2, QColor());
+    m_colorMap.insert(3, QColor());
+    m_colorMap.insert(4, QColor());
+    m_colorMap.insert(5, QColor());
+    m_colorMap.insert(6, QColor());
+    m_colorMap.insert(7, QColor());
+}
+
+int Widget::getColorLevel(int value)
+{
+    if(1000 >= value     && 900 < value)
+        return 0;
+    else if(900 >= value && 800 <value)
+        return 1;
+    else if(800 >= value && 700 < value)
+        return 2;
+    else if(700 >= value && 600 < value)
+        return 3;
+    else if(600 >= value && 500 < value)
+        return 4;
+    else if(500 >= value && 400 < value)
+        return 5;
+    else if(400 >= value && 300 < value)
+        return 6;
+    else if(300 >= value && 200 < value)
+        return 7;
+    else if(200 >= value && 100 < value)
+        return 8;
+    else
+        return 9;
 }
 
 void Widget::on_btnOpen_clicked()

@@ -27,7 +27,10 @@ protected:
     QStringList getSerialPortList();
 
     void paintEvent(QPaintEvent *event) override ;
+    void resizeEvent(QResizeEvent* e) override;
     void initData();
+    void initColorData();
+    int getColorLevel(int value);
 
 protected slots:
     void onReciveData();
@@ -45,5 +48,6 @@ private:
     QMap<int, QRect> m_areaMap;
     QMap<int, int> m_valueMap;
     float m_scale;
+    QMap<int,QColor> m_colorMap;
 };
 #endif // WIDGET_H
