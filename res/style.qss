@@ -1,0 +1,23 @@
+QWidget#widget
+{
+	background: #F2F2F2;
+}
+
+QFrame
+{
+        background: #F2F2F2;
+}
+
+QPushButton#btnMax:checked
+{
+	border-image: url(:/images/res/images/%1/restore.png);
+	background-color: transparent;
+}
+QPushButton#btnClose
+{
+	border-image: url(:/images/res/images/%1/close.png);
+	background-color: transparent;
+}
+
+
+

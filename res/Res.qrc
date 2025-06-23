@@ -1,5 +1,15 @@
 <RCC>
     <qresource prefix="/images">
         <file>images/chair.png</file>
+        <file>images/close.png</file>
+        <file>images/down_arrow.png</file>
+        <file>images/close_hover.png</file>
+        <file>images/pressure.png</file>
+    </qresource>
+    <qresource prefix="/style">
+        <file>style.qss</file>
+    </qresource>
+    <qresource prefix="/qt">
+        <file>etc/qt.conf</file>
     </qresource>
 </RCC>
