@@ -60,8 +60,6 @@ private:
 
     QSerialPort m_serialPort;
     QSerialPortInfo m_serialPortInfo;
-    QString m_strPath;
-    QFile m_file;
     QMap<int, QRect> m_areaMap;
     QMap<int, int> m_valueMap;
     QMap<int,QColor> m_colorMap;
@@ -69,5 +67,6 @@ private:
     QTimer* m_pTimer;
     QVariantAnimation* m_pAnim;
     QMap< QVariantAnimation*, int> m_animMap;
+    QMap< int, QColor> m_curColorMap;
 };
 #endif // WIDGET_H

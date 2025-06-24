@@ -18,16 +18,16 @@
     <number>0</number>
    </property>
    <property name="leftMargin">
-    <number>5</number>
+    <number>2</number>
    </property>
    <property name="topMargin">
-    <number>5</number>
+    <number>2</number>
    </property>
    <property name="rightMargin">
-    <number>5</number>
+    <number>2</number>
    </property>
    <property name="bottomMargin">
-    <number>5</number>
+    <number>2</number>
    </property>
    <item>
     <widget class="QWidget" name="widget" native="true">
@@ -36,19 +36,19 @@
      </property>
      <layout class="QVBoxLayout" name="verticalLayout" stretch="0,1">
       <property name="spacing">
-       <number>5</number>
+       <number>2</number>
       </property>
       <property name="leftMargin">
-       <number>5</number>
+       <number>2</number>
       </property>
       <property name="topMargin">
-       <number>5</number>
+       <number>2</number>
       </property>
       <property name="rightMargin">
-       <number>5</number>
+       <number>2</number>
       </property>
       <property name="bottomMargin">
-       <number>5</number>
+       <number>2</number>
       </property>
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout">
@@ -140,6 +140,17 @@ QComboBox QAbstractItemView::item:hover{
 QPushButton#btnOpen:hover
 {
 	background: #27A1FF;
+	border-radius: 4px;
+	border: 0px solid #000000;
+	font-family: Microsoft YaHei;
+	font-weight: 400;
+	font-size: 12px;
+	color: #FFFFFF;
+}
+
+QPushButton#btnOpen:disabled
+{
+	background: #62b3ff;
 	border-radius: 4px;
 	border: 0px solid #000000;
 	font-family: Microsoft YaHei;
