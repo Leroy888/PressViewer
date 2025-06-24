@@ -44,6 +44,8 @@ protected:
     void initColorData();
     int getColorLevel(int value);
     void initAnimMap();
+    void processFixedLengthData(const QByteArray& data);
+    void parsePacketData(const QByteArray& strData);
 
 protected slots:
     void onReciveData();
