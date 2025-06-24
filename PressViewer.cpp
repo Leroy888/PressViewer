@@ -177,6 +177,8 @@ void PressViewer::paintEvent(QPaintEvent *event)
         radialGrad.setColorAt(0.8, QColor(255, 220, 220)); // 设置起始颜色为黄色
         radialGrad.setColorAt(1.0, Qt::white); // 设置结束颜色为绿色
 
+        radialGrad.setColorAt(1.0, QColor( 0.509804*255, 0.666667*255, 0.898039*255));//设置起始颜色为黄色
+
         int value = m_valueMap.value(key);
         int level = getColorLevel(value);
         float step = 1.0 / (m_valueMap.size() - level);
@@ -197,6 +199,7 @@ void PressViewer::paintEvent(QPaintEvent *event)
 void PressViewer::resizeEvent(QResizeEvent *e)
 {
     initData();
+
 }
 
 void PressViewer::initData()

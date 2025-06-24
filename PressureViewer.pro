@@ -27,8 +27,13 @@ qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
+RC_ICONS = logo.png
+RC_FILE += Resource.rc
+
+
 RESOURCES += \
     res/Res.qrc
 
 DISTFILES += \
     res/etc/qt.conf
+
