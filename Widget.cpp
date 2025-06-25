@@ -23,7 +23,8 @@ Widget::Widget(QWidget *parent)
     : QWidget(parent)
     , ui(new Ui::Widget),
     m_serialThread(new QThread(this)),
-    m_serialWorker(new SerialWorker)
+    m_serialWorker(new SerialWorker),
+    m_bOpened(false)
 {
     ui->setupUi(this);
 
@@ -47,10 +48,12 @@ Widget::Widget(QWidget *parent)
     m_pAnim->setDuration(100);
   //  connect(m_pAnim, &QVariantAnimation::valueChanged, this, &Widget::onAnimationValueChanged);
 
-    QTimer::singleShot(10000,this,[this](){
+    QTimer::singleShot(100,this,[this](){
         initData();
+        initValues();
+        m_curValueMap = m_valueMap;
         this->update();
-        m_pTimer->start(100);
+       // m_pTimer->start(100);
     });
 
     m_serialThread->start();
@@ -167,7 +170,7 @@ void Widget::processFixedLengthData(const QByteArray& data)
 
         if (packet.at(0) == 0x3C && packet.at(1) == 0x3C && packet.at(PACKET_DATA_SIZE - 1) == 0x3C && packet.at(PACKET_DATA_SIZE - 2)) { 
             QByteArray sumPacket = packet.right(CHECK_DATA_SIZE);
-            uint16_t checksum = PublicFunc::crc_16(reinterpret_cast<const  uint8_t*>(sumPacket.constData()), CHECK_DATA_SIZE);
+            char checksum = PublicFunc::crc_16(reinterpret_cast<const  char*>(sumPacket.constData()), CHECK_DATA_SIZE);
             char realSum = PublicFunc::getValue(packet.at(PACKET_DATA_SIZE - -4), packet.at(PACKET_DATA_SIZE - -3));
             if (checksum == realSum) { // 校验和验证
                 parsePacketData(packet);
@@ -245,10 +248,12 @@ void Widget::paintEvent(QPaintEvent *event)
     painter.fillRect(ui->widget->geometry(), Qt::white);
     painter.drawImage(ui->label->geometry(), QImage(":/images/images/chair.png"));
 
+    if(!m_bOpened)
+        return;
     for(QMap<int, QRect>::iterator it = m_areaMap.begin(); it != m_areaMap.end(); ++it)
     {
-        if (it != m_areaMap.begin())
-            continue;
+        // if (it != m_areaMap.begin())
+        //     continue;
 
         QRect rect = it.value();
         int key = it.key();
@@ -395,6 +400,25 @@ void Widget::initColorData()
 
 }
 
+void Widget::initValues()
+{
+    m_valueMap.insert(0, 100);
+    m_valueMap.insert(3, 100);
+
+    m_valueMap.insert(5, 100);
+
+   m_valueMap.insert(6, 100);
+
+   m_valueMap.insert(7, 100);
+
+   m_valueMap.insert(8, 100);
+
+   m_valueMap.insert(1, 100);
+
+   m_valueMap.insert(2, 100);
+
+}
+
 int Widget::getColorLevel(int value)
 {
     int nMax = 700;
@@ -469,30 +493,40 @@ void Widget::on_btnClose_clicked()
 
 void Widget::onTimeout()
 {
+    static int num = 0;
+m_animMap.clear();
     for (QMap<int, int>::iterator it = m_valueMap.begin(); it != m_valueMap.end(); ++it)
     {
-        
         int value = it.value();
         QColor startColor = m_colorMap.value(getColorLevel(value));
-        value -= 30;
+
+       // value -= 30;
         int key = it.key();
+
         m_valueMap[key] = value;
         if (value <= 100)
             m_pTimer->stop();
-        
-        QColor endColor = m_colorMap.value(getColorLevel(value));
-        update();
+        int curValue = m_curValueMap.value(key);
+        QColor endColor = m_colorMap.value(getColorLevel(curValue));
+        //update();
 
-        /*for (int aKey : m_animMap)
+     //   for (int aKey : m_animMap)
         {
-            if (aKey == key)
+       //     if (aKey == key)
             {
-                m_animMap.key(aKey)->setStartValue(startColor);   
-                m_animMap.key(aKey)->setEndValue(startColor);
-                m_animMap.key(aKey)->start();
-                break;
+                // qDebug()<<"onTimeout key:"<<key<< "  aKey:"<<"aKey"<<" ----------------------";
+                // QVariantAnimation* pAnim = new QVariantAnimation(this);
+                // pAnim->setDuration(100);
+                // connect(pAnim, &QVariantAnimation::valueChanged, this, &Widget::onAnimationValueChanged);
+                // m_animMap.insert(pAnim, key);
+
+                // m_animMap.key(key)->stop();
+                // m_animMap.key(key)->setStartValue(startColor);
+                // m_animMap.key(key)->setEndValue(endColor);
+                // m_animMap.key(key)->start();
+                // break;
             }
-        }*/
+        }
     }
 }
 
@@ -506,12 +540,19 @@ void Widget::onAnimationValueChanged(const QVariant& value)
     int key = m_animMap.value(pAnim);
     m_colorMap[key] = c;
     update();
+    qDebug()<<"onAnimationValueChanged color:"<<c;
 }
 
 void Widget::onUpdateData(QMap<int, int> valueMap)
 {
-    m_valueMap = valueMap;
+    //m_valueMap = valueMap;
+    m_valueMap = m_curValueMap;
+    m_curValueMap = valueMap;
+    //m_pTimer->start(100);
+   // qDebug()<<"update values ----------------------";
     this->update();
+
+   // onTimeout();
 }
 
 void Widget::onPortOpened(bool success)
@@ -519,6 +560,18 @@ void Widget::onPortOpened(bool success)
     if (!success)
     {
         QMessageBox::information(this, tr("Tips"), tr("Failed to open the serialport"));
+        return;
     }
+    else
+    {
+        ui->btnClosePort->setVisible(true);;
+    }
+    m_bOpened = success;
+}
+
+
+void Widget::on_btnClosePort_clicked()
+{
+
 }
 

@@ -33,7 +33,7 @@ uint16_t PublicFunc::calculateCRC16(const QByteArray& data)
     return crc;
 }
 
-uint16_t PublicFunc::crc_16(const uint8_t* data, size_t length)
+uint16_t PublicFunc::crc_16(const char* data, size_t length)
 {
     uint16_t crc = 0;
     while (length--) {

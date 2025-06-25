@@ -4,6 +4,7 @@
 #include <QSerialPort>
 #include <QByteArray>
 #include <QMap>
+#include <QTimer>
 #include "PublicFunc.h"
 
 class SerialWorker : public QObject
@@ -24,7 +25,8 @@ public slots:
 
 private slots:
     void readData();
-
+    void onTimeout();
+    void onUpdateTimeout();
 signals:
     void portOpened(bool success);
     void portClosed();
@@ -38,6 +40,11 @@ private:
     int m_baudRate;
     QByteArray m_buffer;
     QMap<int, int> m_valueMap;
+    QMap<int, int> m_lastValueMap;
+    QTimer* m_pTimer;
+    bool m_bPuase;
+    QTimer* m_pUpdateTimer;
+    QMap<int, int> m_stepMap;
 
     void processBuffer();
 };

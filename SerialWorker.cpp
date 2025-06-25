@@ -3,10 +3,18 @@
 
 const int PACKET_SIZE = 247; // 假设每个数据包字节
 const int CHECK_SIZE = 237;
+const int READ_TIME = 300;
+const float UPDATE_NUM = 10.0;
 
 SerialWorker::SerialWorker(QObject* parent)
-    : QObject(parent), m_serialPort(nullptr), m_baudRate(9600)
+    : QObject(parent), m_serialPort(nullptr), m_baudRate(9600),
+    m_bPuase(false)
 {
+    m_pTimer = new QTimer(this);
+    connect(m_pTimer,&QTimer::timeout,this,&SerialWorker::onTimeout);
+
+    m_pUpdateTimer = new QTimer(this);
+    connect(m_pUpdateTimer,&QTimer::timeout,this,&SerialWorker::onUpdateTimeout);
 }
 
 SerialWorker::~SerialWorker()
@@ -55,6 +63,8 @@ void SerialWorker::openPort()
         emit errorOccurred(m_serialPort->errorString());
         emit portOpened(false);
     }
+
+    m_pTimer->start(READ_TIME);
 }
 
 void SerialWorker::closePort()
@@ -81,37 +91,43 @@ void SerialWorker::readData()
         return;
     }
     QByteArray strData = m_serialPort->readAll();
-    qDebug() << "data:" << strData.toHex();
     m_buffer.append(strData);
     processBuffer();
 }
 
 void SerialWorker::processBuffer()
 {
-    while (m_buffer.size() >= PACKET_SIZE) {
+    while (m_buffer.size() >= PACKET_SIZE && !m_bPuase) {
+
         uint8_t address = static_cast<uint8_t>(m_buffer[0]);
         if (m_buffer.at(0) != 0x3C || m_buffer.at(1) != 0x3C) {
             m_buffer.remove(0, 1);
             continue;
         }
 
-        // 检查功能码是否有效
-        uint8_t functionCode = static_cast<uint8_t>(m_buffer[1]);
-        if (functionCode > 0x2B) {
-            m_buffer.remove(0, 2);
-            continue;
-        }
-
         QByteArray packet = m_buffer.left(PACKET_SIZE);
         m_buffer.remove(0, PACKET_SIZE);
-
-        if (packet.at(0) == 0x3C && packet.at(1) == 0x3C && packet.at(PACKET_SIZE - 1) == 0x3C && packet.at(PACKET_SIZE - 2)) {
+       // qDebug()<<"packet size:"<<packet.size()<< " packet:"<<packet.toHex();
+        if (packet.at(0) == 0x3C && packet.at(1) == 0x3C) /*&& packet.at(PACKET_SIZE - 1) == 0x3E && 0x3E == packet.at(PACKET_SIZE - 2))*/ {
             QByteArray sumPacket = packet.right(CHECK_SIZE);
-            uint16_t checksum = PublicFunc::crc_16(reinterpret_cast<const  uint8_t*>(sumPacket.constData()), CHECK_SIZE);
-            char realSum = PublicFunc::getValue(packet.at(PACKET_SIZE - -4), packet.at(PACKET_SIZE - -3));
-            if (checksum == realSum) { // 校验和验证
+           // char checksum = PublicFunc::crc_16(reinterpret_cast<const  char*>(sumPacket.constData()), CHECK_SIZE);
+           // char realSum = PublicFunc::getValue(packet.at(PACKET_SIZE - -4), packet.at(PACKET_SIZE - -3));
+           // qDebug()<<"checkSum:"<<checksum<<"  realSum:"<<realSum;
+           // qDebug()<<"--------------------";
+           // if (checksum == realSum)
+            { // 校验和验证
                 parsePacketData(packet);
-                sigUpdateData(m_valueMap);
+                //sigUpdateData(m_valueMap);
+                if(m_lastValueMap.isEmpty())
+                    m_lastValueMap = m_valueMap;
+                for(int key : m_valueMap.keys())
+                {
+                    int step = (m_valueMap.value(key) - m_lastValueMap.value(key)) / UPDATE_NUM;
+                    m_stepMap.insert(key, step);
+                }
+                m_pUpdateTimer->start(300 / UPDATE_NUM);
+                m_buffer.clear();
+                m_bPuase = true;
             }
 
         }
@@ -125,7 +141,8 @@ void SerialWorker::parsePacketData(const QByteArray& strData)
     {
         if (2 == i)
         {
-            int value = PublicFunc::getValue(strData[i * 13 * 2 + 3 * 2 + index], strData[i * 13 * 2 + 3 * 2 + 1 + index]);
+            int value = PublicFunc::getValue(strData[i * 13 * 2 + 4 * 2 + index], strData[i * 13 * 2 + 4 * 2 + 1 + index]);
+           // qDebug()<<"1 row value:"<<value;
             value = value < 100 ? 100 : value;
             value = value > 700 ? 700 : value;
             m_valueMap.insert(i, value);
@@ -134,20 +151,42 @@ void SerialWorker::parsePacketData(const QByteArray& strData)
         else if (3 == i)
         {
             int value = PublicFunc::getValue(strData[i * 13 * 2 + 0 * 2 + index], strData[i * 13 * 2 + 0 * 2 + 1 + index]);
+           // qDebug()<<"3 row value:"<<value;
             value = value < 100 ? 100 : value;
             value = value > 700 ? 700 : value;
             m_valueMap.insert(i, value);
         }
-        else if (5 == i || 6 == i)
+        else if (5 == i)
         {
-            int value = PublicFunc::getValue(strData[i * 13 * 2 + 2 * 2 + index], strData[i * 13 * 2 + 2 * 2 + 1 + index]);
+            QByteArray tmpArry = strData.mid(i * 13 * 2+ index, i * 13 * 3+ index);
+           // qDebug()<<i<<" tmpArry:"<<tmpArry.toHex();
+            int value = PublicFunc::getValue(strData[i * 13 * 2 + 0 * 2 + index], strData[i * 13 * 2 + 0 * 2 + 1 + index]);
+           // qDebug()<<i<<" row value:"<<value;
             value = value < 100 ? 100 : value;
             value = value > 700 ? 700 : value;
             m_valueMap.insert(i, value);
         }
-        else if (7 == i)
+        else if ( 6 == i)
         {
-            int value = PublicFunc::getValue(strData[i * 13 * 2 + 8 * 2 + index], strData[i * 13 * 2 + 8 * 2 + 1 + index]);
+            QByteArray tmpArry = strData.mid(i * 13 * 2+ index, i * 13 * 2 + 26 + index);
+            qDebug()<<i<<" tmpArry:"<<tmpArry;
+            int value =0;
+            for(int j = 0; j<12 ; ++j){
+                qDebug()<<i<<" tmpArry: value1:"<<strData[i * 13 * 2 + j * 2 + index]<<"  value2:"<<strData[i * 13 * 2 + j * 2 + 1 + index];
+               value = PublicFunc::getValue(strData[i * 13 * 2 + j * 2 + index], strData[i * 13 * 2 + j * 2 + 1 + index]);
+                qDebug()<<"---------value:"<<value;
+                if(value > 0)
+                   break;
+            }
+           qDebug()<<i<<" row value:"<<value;
+            value = value < 100 ? 100 : value;
+            value = value > 700 ? 700 : value;
+            m_valueMap.insert(i, value);
+        }
+        else if (7 == i | 8 == i)
+        {
+            int value = PublicFunc::getValue(strData[i * 13 * 2 + 3 * 2 + index], strData[i * 13 * 2 + 3 * 2 + 1 + index]);
+         //   qDebug()<<i<<" row value:"<<value;
             value = value < 100 ? 100 : value;
             value = value > 700 ? 700 : value;
             m_valueMap.insert(i, value);
@@ -157,18 +196,34 @@ void SerialWorker::parsePacketData(const QByteArray& strData)
         else
         {
             int value = PublicFunc::getValue(strData[i * 13 * 2 + 5 * 2 + index], strData[i * 13 * 2 + 5 * 2 + 1 + index]);
+         //   qDebug()<<i<<" row value:"<<value;
             value = value < 100 ? 100 : value;
             value = value > 700 ? 700 : value;
-            m_valueMap.insert(1, value);
+            m_valueMap.insert(i, value);
         }
-        /* int sum = 0;
-         for(int j= 0; j<12; j+=2)
-         {
-             sum += getValue(strData[i*13 + j], strData[i*13 + j+1]);
-         }
-         m_valueMap.insert(i, sum / 12);
-         if(2 == i)
-             m_valueMap.insert(1, sum / 12);*/
+    }
+}
+
+void SerialWorker::onTimeout()
+{
+    m_lastValueMap = m_valueMap;
+    m_pUpdateTimer->stop();
+    m_bPuase = false;
+}
+
+void SerialWorker::onUpdateTimeout()
+{
+    static int num = 0;
+    for(int key : m_valueMap.keys())
+    {
+        int step = m_stepMap.value(key);
+        m_valueMap.insert(key, m_valueMap.value(key) - step);
+    }
+    emit sigUpdateData(m_valueMap);
+    ++num;
+    if(num == UPDATE_NUM){
+        m_pUpdateTimer->stop();
+        num = 0;
     }
 }
 

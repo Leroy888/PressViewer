@@ -32,10 +32,10 @@ void logOutput(QtMsgType type, const QMessageLogContext& context, const QString&
         return;
 
     // 设置输出信息格式
-    QString strDateTime = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss ddd");
+    QString strDateTime = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss");
     //保存信息：类型、消息、文件、行数、函数
-    QString strMessage = QString("Date:%1   Type:%2  Message:%3 ").arg(strDateTime)
-        .arg(strMsg.toLatin1().constData()).arg(localMsg.constData());
+    QString strMessage = QString("Date:%1  Message:%3 ").arg(strDateTime)
+        .arg(localMsg.constData());
 
     // 输出信息至文件中（读写、追加形式）
     QFile file(QApplication::applicationDirPath() + "/log.txt");

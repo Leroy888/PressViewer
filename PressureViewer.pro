@@ -10,6 +10,7 @@ CONFIG += c++17
 
 SOURCES += \
     ColorHelper.cpp \
+    PublicFunc.cpp \
     SerialWorker.cpp \
     main.cpp \
     Widget.cpp
@@ -17,6 +18,7 @@ SOURCES += \
 HEADERS += \
     ColorHelper.h \
     Func.h \
+    PublicFunc.h \
     SerialWorker.h \
     Widget.h
 

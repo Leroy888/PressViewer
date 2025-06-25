@@ -44,6 +44,7 @@ protected:
     void mouseMoveEvent(QMouseEvent *event) override;
     void initData();
     void initColorData();
+    void initValues();
     int getColorLevel(int value);
     void initAnimMap();
     void processFixedLengthData(const QByteArray& data);
@@ -61,6 +62,8 @@ private slots:
 
     void on_btnClose_clicked();
 
+    void on_btnClosePort_clicked();
+
 signals:
     void sigOpenPort();
     void sigClosePort();
@@ -72,6 +75,7 @@ private:
     QSerialPortInfo m_serialPortInfo;
     QMap<int, QRect> m_areaMap;
     QMap<int, int> m_valueMap;
+    QMap<int, int> m_curValueMap;
     QMap<int,QColor> m_colorMap;
     QPoint m_dragPosition;
     QTimer* m_pTimer;
@@ -81,5 +85,6 @@ private:
 
     QThread* m_serialThread;
     SerialWorker* m_serialWorker;
+    bool m_bOpened;
 };
 #endif // WIDGET_H
