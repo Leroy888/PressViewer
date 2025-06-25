@@ -6,7 +6,6 @@
 #include <QFile >
 #include <QTextStream >
 #include <QDateTime>
-#include "PressViewer.h"
 
 
 void logOutput(QtMsgType type, const QMessageLogContext& context, const QString& msg)

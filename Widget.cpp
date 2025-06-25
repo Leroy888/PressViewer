@@ -11,56 +11,19 @@
 #include <QRandomGenerator>
 #include <QVariantAnimation>
 #include <QMessageBox>
+#include "SerialWorker.h"
+#include "PublicFunc.h"
 
-const int PACKET_SIZE = 247; // 假设每个数据包字节
-const int CHECK_SIZE = 237;
+const int PACKET_DATA_SIZE = 247; // 假设每个数据包字节
+const int CHECK_DATA_SIZE = 237;
 
-
-uint16_t readU16LittleEndian(const uint8_t* data, int i) {
-    return static_cast<uint16_t>(data[i]) |
-           (static_cast<uint16_t>(data[++i]) << 8);
-}
-
-uint16_t getValue(uint16_t v1, uint16_t v2)
-{
-    return v1 | (v2 << 8);
-}
-
-// CRC16校验计算
-uint16_t calculateCRC16(const QByteArray& data)
-{
-    uint16_t crc = 0xFFFF;
-    const uint16_t polynomial = 0xA001;
-
-    for (char byte : data) {
-        crc ^= static_cast<uint8_t>(byte);
-        for (int i = 0; i < 8; i++) {
-            if (crc & 0x0001) {
-                crc >>= 1;
-                crc ^= polynomial;
-            }
-            else {
-                crc >>= 1;
-            }
-        }
-    }
-    return crc;
-}
-
-uint16_t crc_16(const uint8_t* data, size_t length)
-{
-    uint16_t crc = 0;
-    while (length--) {
-        crc ^= *data++;
-        for (int i = 0; i < 8; ++i) { crc = (crc & 0x0001) ? (crc >> 1) ^ 0xA001 : (crc >> 1); }
-    }
-    return crc;
-}
 
 
 Widget::Widget(QWidget *parent)
     : QWidget(parent)
-    , ui(new Ui::Widget)
+    , ui(new Ui::Widget),
+    m_serialThread(new QThread(this)),
+    m_serialWorker(new SerialWorker)
 {
     ui->setupUi(this);
 
@@ -68,6 +31,14 @@ Widget::Widget(QWidget *parent)
     initColorData();
     ui->cmbBox_port->clear();
     ui->cmbBox_port->addItems(getSerialPortList());
+
+    connect(m_serialWorker, &SerialWorker::sigUpdateData, this, &Widget::onUpdateData);
+    connect(m_serialWorker, &SerialWorker::portOpened, this, &Widget::onPortOpened);
+    connect(this, &Widget::sigOpenPort, m_serialWorker, &SerialWorker::openPort);
+    connect(this, &Widget::sigClosePort, m_serialWorker, &SerialWorker::closePort);
+    connect(m_serialThread, &QThread::finished, m_serialWorker, &SerialWorker::deleteLater);
+    connect(m_serialThread, &QThread::finished, m_serialThread, &QThread::deleteLater);
+    m_serialWorker->moveToThread(m_serialThread);
 
     m_pTimer = new QTimer(this);
     connect(m_pTimer, &QTimer::timeout, this, &Widget::onTimeout);
@@ -81,6 +52,8 @@ Widget::Widget(QWidget *parent)
         this->update();
         m_pTimer->start(100);
     });
+
+    m_serialThread->start();
 }
 
 void Widget::initAnimMap()
@@ -97,6 +70,8 @@ void Widget::initAnimMap()
 
 Widget::~Widget()
 {
+    m_serialThread->quit();
+    m_serialThread->wait();
     delete ui;
     //m_file.close();
 }
@@ -173,7 +148,7 @@ void Widget::processFixedLengthData(const QByteArray& data)
 
     buffer.append(data);
 
-    while (buffer.size() >= PACKET_SIZE) {
+    while (buffer.size() >= PACKET_DATA_SIZE) {
         uint8_t address = static_cast<uint8_t>(buffer[0]);
         if (buffer.at(0) != 0x3C || buffer.at(1) != 0x3C) {
             buffer.remove(0, 1);
@@ -187,13 +162,13 @@ void Widget::processFixedLengthData(const QByteArray& data)
             continue;
         }
 
-        QByteArray packet = buffer.left(PACKET_SIZE);
-        buffer.remove(0, PACKET_SIZE);
+        QByteArray packet = buffer.left(PACKET_DATA_SIZE);
+        buffer.remove(0, PACKET_DATA_SIZE);
 
-        if (packet.at(0) == 0x3C && packet.at(1) == 0x3C && packet.at(PACKET_SIZE - 1) == 0x3C && packet.at(PACKET_SIZE - 2)) { 
-            QByteArray sumPacket = packet.right(CHECK_SIZE);
-            uint16_t checksum = crc_16(reinterpret_cast<const  uint8_t*>(sumPacket.constData()), CHECK_SIZE);
-            char realSum = getValue(packet.at(PACKET_SIZE - -4), packet.at(PACKET_SIZE - -3));
+        if (packet.at(0) == 0x3C && packet.at(1) == 0x3C && packet.at(PACKET_DATA_SIZE - 1) == 0x3C && packet.at(PACKET_DATA_SIZE - 2)) { 
+            QByteArray sumPacket = packet.right(CHECK_DATA_SIZE);
+            uint16_t checksum = PublicFunc::crc_16(reinterpret_cast<const  uint8_t*>(sumPacket.constData()), CHECK_DATA_SIZE);
+            char realSum = PublicFunc::getValue(packet.at(PACKET_DATA_SIZE - -4), packet.at(PACKET_DATA_SIZE - -3));
             if (checksum == realSum) { // 校验和验证
                 parsePacketData(packet);
 
@@ -211,7 +186,7 @@ void Widget::parsePacketData(const QByteArray& strData)
     {
         if (2 == i)
         {
-            int value = getValue(strData[i * 13 * 2 + 3 * 2 + index], strData[i * 13 * 2 + 3 * 2 + 1 + index]);
+            int value = PublicFunc::getValue(strData[i * 13 * 2 + 3 * 2 + index], strData[i * 13 * 2 + 3 * 2 + 1 + index]);
             value = value < 100 ? 100 : value;
             value = value > 700 ? 700 : value;
             m_valueMap.insert(i, value);
@@ -219,21 +194,21 @@ void Widget::parsePacketData(const QByteArray& strData)
         }
         else if (3 == i)
         {
-            int value = getValue(strData[i * 13 * 2 + 0 * 2 + index], strData[i * 13 * 2 + 0 * 2 + 1 + index]);
+            int value = PublicFunc::getValue(strData[i * 13 * 2 + 0 * 2 + index], strData[i * 13 * 2 + 0 * 2 + 1 + index]);
             value = value < 100 ? 100 : value;
             value = value > 700 ? 700 : value;
             m_valueMap.insert(i, value);
         }
         else if (5 == i || 6 == i)
         {
-            int value = getValue(strData[i * 13 * 2 + 2 * 2 + index], strData[i * 13 * 2 + 2 * 2 + 1 + index]);
+            int value = PublicFunc::getValue(strData[i * 13 * 2 + 2 * 2 + index], strData[i * 13 * 2 + 2 * 2 + 1 + index]);
             value = value < 100 ? 100 : value;
             value = value > 700 ? 700 : value;
             m_valueMap.insert(i, value);
         }
         else if (7 == i)
         {
-            int value = getValue(strData[i * 13 * 2 + 8 * 2 + index], strData[i * 13 * 2 + 8 * 2 + 1 + index]);
+            int value = PublicFunc::getValue(strData[i * 13 * 2 + 8 * 2 + index], strData[i * 13 * 2 + 8 * 2 + 1 + index]);
             value = value < 100 ? 100 : value;
             value = value > 700 ? 700 : value;
             m_valueMap.insert(i, value);
@@ -242,7 +217,7 @@ void Widget::parsePacketData(const QByteArray& strData)
             continue;
         else
         {
-            int value = getValue(strData[i * 13 * 2 + 5 * 2 + index], strData[i * 13 * 2 + 5 * 2 + 1 + index]);
+            int value = PublicFunc::getValue(strData[i * 13 * 2 + 5 * 2 + index], strData[i * 13 * 2 + 5 * 2 + 1 + index]);
             value = value < 100 ? 100 : value;
             value = value > 700 ? 700 : value;
             m_valueMap.insert(1, value);
@@ -479,7 +454,10 @@ int Widget::getColorLevel(int value)
 
 void Widget::on_btnOpen_clicked()
 {
-    initPort();
+  //  initPort();
+
+    m_serialWorker->setPortName(ui->cmbBox_port->currentText());
+    Q_EMIT sigOpenPort();
 }
 
 
@@ -528,5 +506,19 @@ void Widget::onAnimationValueChanged(const QVariant& value)
     int key = m_animMap.value(pAnim);
     m_colorMap[key] = c;
     update();
+}
+
+void Widget::onUpdateData(QMap<int, int> valueMap)
+{
+    m_valueMap = valueMap;
+    this->update();
+}
+
+void Widget::onPortOpened(bool success)
+{
+    if (!success)
+    {
+        QMessageBox::information(this, tr("Tips"), tr("Failed to open the serialport"));
+    }
 }
 

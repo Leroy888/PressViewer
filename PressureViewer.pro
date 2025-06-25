@@ -10,13 +10,14 @@ CONFIG += c++17
 
 SOURCES += \
     ColorHelper.cpp \
-    PressViewer.cpp \
+    SerialWorker.cpp \
     main.cpp \
     Widget.cpp
 
 HEADERS += \
     ColorHelper.h \
-    PressViewer.h \
+    Func.h \
+    SerialWorker.h \
     Widget.h
 
 FORMS += \

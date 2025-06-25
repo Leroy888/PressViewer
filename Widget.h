@@ -8,9 +8,11 @@
 #include <QRect>
 #include <QMap>
 #include <QMouseEvent>
+#include <QThread>
 
 class QTimer;
 class QVariantAnimation;
+class SerialWorker;
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -51,11 +53,17 @@ protected slots:
     void onReciveData();
     void onTimeout();
     void onAnimationValueChanged(const QVariant& value);
+    void onUpdateData(QMap<int, int> valueMap);
+    void onPortOpened(bool success);
 
 private slots:
     void on_btnOpen_clicked();
 
     void on_btnClose_clicked();
+
+signals:
+    void sigOpenPort();
+    void sigClosePort();
 
 private:
     Ui::Widget *ui;
@@ -70,5 +78,8 @@ private:
     QVariantAnimation* m_pAnim;
     QMap< QVariantAnimation*, int> m_animMap;
     QMap< int, QColor> m_curColorMap;
+
+    QThread* m_serialThread;
+    SerialWorker* m_serialWorker;
 };
 #endif // WIDGET_H
