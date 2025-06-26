@@ -26,6 +26,9 @@ protected slots:
 	void on_btnOK_clicked();
 	void on_btnCancel_clicked();
 
+private slots:
+    void on_btnClose_clicked();
+
 private:
 	Ui::SettingsDlgClass ui;
 

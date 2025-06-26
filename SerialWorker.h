@@ -5,6 +5,7 @@
 #include <QByteArray>
 #include <QMap>
 #include <QTimer>
+#include <QColor>
 #include "PublicFunc.h"
 
 class SerialWorker : public QObject
@@ -18,6 +19,9 @@ public:
     void setBaudRate(int baudRate);
     void parsePacketData(const QByteArray& strData);
     void SetParams(const ST_ViewParam& stParam);
+    void initColorData();
+    void updateShowColor();
+    void updateColor();
 
 public slots:
     void openPort();
@@ -35,6 +39,8 @@ signals:
     void errorOccurred(const QString& errorString);
     void sigUpdateData(QMap<int, int> valueMap);
 
+    void sigUpdateColor(QMap<int,QList<QColor>> colorMap);
+
 private:
     QSerialPort* m_serialPort;
     QString m_portName;
@@ -48,6 +54,14 @@ private:
     QMap<int, int> m_stepMap;
 
     ST_ViewParam m_stParam;
+
+    QMap< int, QColor> m_curColorMap;
+
+    QMap<int,QColor> m_colorMap;
+    QMap<int,QList<QColor>> m_showColorMap;
+    QMap<int,QList<QColor>> m_lastShowColorMap;
+
+    QMap<int,QList<QColor>> m_realColorMap;
 
     void processBuffer();
 };

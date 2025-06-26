@@ -31,6 +31,7 @@ Widget::Widget(QWidget *parent)
     ui->cmbBox_port->addItems(getSerialPortList());
 
     connect(m_serialWorker, &SerialWorker::sigUpdateData, this, &Widget::onUpdateData);
+    connect(m_serialWorker, &SerialWorker::sigUpdateColor, this, &Widget::onUpdateColor);
     connect(m_serialWorker, &SerialWorker::portOpened, this, &Widget::onPortOpened);
     connect(this, &Widget::sigOpenPort, m_serialWorker, &SerialWorker::openPort);
     connect(this, &Widget::sigClosePort, m_serialWorker, &SerialWorker::closePort);
@@ -138,7 +139,7 @@ void Widget::paintEvent(QPaintEvent *event)
                                     rect.width() > rect.height() ? rect.width() / 2 : rect.height() / 2);
 
         int value = m_valueMap.value(key);
-        int level = getColorLevel(value);
+        int level = PublicFunc::getColorLevel(value);
      //   qDebug() << "value:" << value << "level:"<<level<< "  ########################";
         float step = 1.0 / (m_colorMap.size() - level);
         int colorCount = (m_colorMap.size() - level) > 4 ? 4 : (m_colorMap.size() - level);
@@ -306,63 +307,6 @@ void Widget::initValues()
     m_stParams.showValueMap.insert(8, true);
 }
 
-int Widget::getColorLevel(int value)
-{
-    int nMax = 700;
-    int nMin = 100;
-    int nStep = (nMax - nMin) / 20;
-    /*  for (int i = 0; i < 20; ++i)
-    {
-        nMin = nMax - nStep;
-        if (value <= nMax && value >nMin)
-            return i;
-        nMax = nMin;
-    }*/
-
-
-    if(700 >= value     && 670 < value)
-        return 0;
-    else if(670 >= value && 640 <value)
-        return 1;
-    else if(640 >= value && 610 < value)
-        return 2;
-    else if(610 >= value && 580 < value)
-        return 3;
-    else if(580 >= value && 550 < value)
-        return 4;
-    else if(550 >= value && 520 < value)
-        return 5;
-    else if(520 >= value && 490 < value)
-        return 6;
-    else if(490 >= value && 460 < value)
-        return 7;
-    else if(460 >= value && 430 < value)
-        return 8;
-    else if (430 >= value && 400 < value)
-        return 9;
-    else if (400 >= value && 370 < value)
-        return 10;
-    else if (370 >= value && 340 < value)
-        return 11;
-    else if (340 >= value && 310 < value)
-        return 12;
-    else if (310 >= value && 280 < value)
-        return 12;
-    else if (280 >= value && 250 < value)
-        return 14;
-    else if (250 >= value && 220 < value)
-        return 15;
-    else if (220 >= value && 190 < value)
-        return 16;
-    else if (190 >= value && 160 < value)
-        return 17;
-    else if (160 >= value && 130 < value)
-        return 18;
-    else /*if (130 >= value && 100 < value)*/
-        return 19;
-    
-}
-
 void Widget::on_btnOpen_clicked()
 {
   //  initPort();
@@ -385,7 +329,7 @@ m_animMap.clear();
     for (QMap<int, int>::iterator it = m_valueMap.begin(); it != m_valueMap.end(); ++it)
     {
         int value = it.value();
-        QColor startColor = m_colorMap.value(getColorLevel(value));
+        QColor startColor = m_colorMap.value(PublicFunc::getColorLevel(value));
 
        // value -= 30;
         int key = it.key();
@@ -394,7 +338,7 @@ m_animMap.clear();
         if (value <= 100)
             m_pTimer->stop();
         int curValue = m_curValueMap.value(key);
-        QColor endColor = m_colorMap.value(getColorLevel(curValue));
+        QColor endColor = m_colorMap.value(PublicFunc::getColorLevel(curValue));
         //update();
 
      //   for (int aKey : m_animMap)
@@ -457,6 +401,12 @@ void Widget::onPortOpened(bool success)
     m_bOpened = success;
 }
 
+void Widget::onUpdateColor(QMap<int, QList<QColor> > realColorMap)
+{
+    m_realColorMap = realColorMap;
+    update();
+}
+
 void Widget::on_btnClosePort_clicked()
 {
     emit sigClosePort();
@@ -471,6 +421,57 @@ void Widget::on_btnSettings_clicked()
     {
         m_stParams = dlg.GetParams();
         m_serialWorker->SetParams(m_stParams);
+    }
+}
+
+
+void Widget::on_btnMin_clicked()
+{
+    this->showMinimized();
+}
+
+void Widget::repaintColor()
+{
+    QPainter painter(this);
+
+    painter.setRenderHint(QPainter::Antialiasing, true);
+    painter.fillRect(this->rect(), Qt::gray);
+    painter.fillRect(ui->widget->geometry(), Qt::white);
+    painter.drawImage(ui->label->geometry(), QImage(":/images/images/chair.png"));
+
+    if(!m_bOpened)
+        return;
+    for(QMap<int, QRect>::iterator it = m_areaMap.begin(); it != m_areaMap.end(); ++it)
+    {
+        int key = it.key();
+        if (!m_stParams.showValueMap.value(key))
+            continue;
+
+        QRect rect = it.value();
+        QRadialGradient radialGrad(rect.x() + rect.width() / 2, rect.y() + rect.height() / 2,
+                                   rect.width() > rect.height() ? rect.width() / 2 : rect.height() / 2);
+
+        int value = m_valueMap.value(key);
+        int level = PublicFunc::getColorLevel(value);
+        float step = 1.0 / (m_colorMap.size() - level);
+        int wStep = (rect.width() - rect.width() * 0.3) / 4;
+        int hStep = (rect.height() - rect.height() * 0.3) / 4;
+        radialGrad.setColorAt(0.0, m_colorMap.value(level));
+        int j = 0;
+
+        QList<QColor> clrList = m_realColorMap.value(key);
+        for(int i=0; i < clrList.size(); i++)
+        {
+            QColor clr = clrList.at(i);
+            radialGrad.setColorAt(1 - j*step, clr);
+            QPoint pt = QPoint(rect.x() + j * wStep, rect.y() + j * hStep);
+            QRect tmprect = QRect(rect.x() + j * wStep / 2, rect.y() + j * hStep / 2, rect.width() - (j * wStep), rect.height() - (j * hStep));
+
+            painter.setBrush(radialGrad); // 设置画笔的填充颜色为渐变
+            painter.setPen(Qt::NoPen); // 不绘制边框
+            painter.drawEllipse(tmprect); // 绘制椭圆，填充渐变色
+        }
+
     }
 }
 

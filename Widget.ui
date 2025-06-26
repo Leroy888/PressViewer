@@ -279,7 +279,7 @@ QPushButton:disabled
         <item>
          <spacer name="horizontalSpacer_4">
           <property name="orientation">
-           <enum>Qt::Horizontal</enum>
+           <enum>Qt::Orientation::Horizontal</enum>
           </property>
           <property name="sizeHint" stdset="0">
            <size>
@@ -288,6 +288,41 @@ QPushButton:disabled
            </size>
           </property>
          </spacer>
+        </item>
+        <item>
+         <widget class="QPushButton" name="btnMin">
+          <property name="minimumSize">
+           <size>
+            <width>26</width>
+            <height>26</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>26</width>
+            <height>26</height>
+           </size>
+          </property>
+          <property name="cursor">
+           <cursorShape>PointingHandCursor</cursorShape>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">QPushButton
+{
+	border-image: url(:/images/images/min.png);
+	background-color: transparent;
+}
+
+QPushButton:hover
+{
+	border-image: url(:/images/images/min.png);
+	background-color: transparent;
+}</string>
+          </property>
+          <property name="text">
+           <string/>
+          </property>
+         </widget>
         </item>
         <item>
          <widget class="QPushButton" name="btnClose">
@@ -331,7 +366,7 @@ QPushButton#btnClose:hover
         <item>
          <spacer name="horizontalSpacer">
           <property name="orientation">
-           <enum>Qt::Horizontal</enum>
+           <enum>Qt::Orientation::Horizontal</enum>
           </property>
           <property name="sizeHint" stdset="0">
            <size>
@@ -360,7 +395,7 @@ QPushButton#btnClose:hover
         <item>
          <spacer name="horizontalSpacer_2">
           <property name="orientation">
-           <enum>Qt::Horizontal</enum>
+           <enum>Qt::Orientation::Horizontal</enum>
           </property>
           <property name="sizeHint" stdset="0">
            <size>

@@ -45,14 +45,15 @@ protected:
     void initData();
     void initColorData();
     void initValues();
-    int getColorLevel(int value);
     void initAnimMap();
+    void repaintColor();
 
 protected slots:
     void onTimeout();
     void onAnimationValueChanged(const QVariant& value);
     void onUpdateData(QMap<int, int> valueMap);
     void onPortOpened(bool success);
+    void onUpdateColor(QMap<int,QList<QColor>> realColorMap);
 
 private slots:
     void on_btnOpen_clicked();
@@ -62,6 +63,8 @@ private slots:
     void on_btnClosePort_clicked();
 
     void on_btnSettings_clicked();
+
+    void on_btnMin_clicked();
 
 signals:
     void sigOpenPort();
@@ -87,5 +90,7 @@ private:
     bool m_bOpened;
 
     ST_ViewParam m_stParams;
+
+    QMap<int,QList<QColor>> m_realColorMap;
 };
 #endif // WIDGET_H

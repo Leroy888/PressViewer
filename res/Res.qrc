@@ -10,6 +10,7 @@
         <file>images/settings.png</file>
         <file>images/connect.png</file>
         <file>images/discnt.png</file>
+        <file>images/min.png</file>
     </qresource>
     <qresource prefix="/style">
         <file>style.qss</file>

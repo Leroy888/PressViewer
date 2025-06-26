@@ -19,18 +19,18 @@ void SettingsDlg::initUi()
 {
     this->setWindowIcon(QIcon(":/images/images/pressure.png"));
     setAttribute(Qt::WA_TranslucentBackground, true);
-   // ui.widget->setStyleSheet("background: #FFFFFF;"); // Èç¹ûĞèÒªÑùÊ½±í
+   // ui.widget->setStyleSheet("background: #FFFFFF;"); // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½Ê½ï¿½ï¿½
 
     this->setWindowFlags(this->windowFlags() | Qt::FramelessWindowHint);
-    //ÊµÀıÒõÓ°shadow
+    //Êµï¿½ï¿½ï¿½ï¿½Ó°shadow
     QGraphicsDropShadowEffect* shadow = new QGraphicsDropShadowEffect(this);
-    //ÉèÖÃÒõÓ°¾àÀë
+    //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó°ï¿½ï¿½ï¿½ï¿½
     shadow->setOffset(0, 0);
-    //ÉèÖÃÒõÓ°ÑÕÉ«
+    //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó°ï¿½ï¿½É«
     shadow->setColor(QColor(0, 0, 0, 76));
-    //ÉèÖÃÒõÓ°Ô²½Ç
+    //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó°Ô²ï¿½ï¿½
     shadow->setBlurRadius(10);
-    //¸øÇ¶Ì×QWidgetÉèÖÃÒõÓ°
+    //ï¿½ï¿½Ç¶ï¿½ï¿½QWidgetï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó°
     this->setGraphicsEffect(shadow);
 
     ui.lineEdit->setValidator(new QIntValidator(ui.lineEdit));
@@ -111,4 +111,9 @@ void SettingsDlg::updateParams()
     m_stParam.indexMap[6] = ui.comboBox_6->currentIndex();
     m_stParam.indexMap[7] = ui.comboBox_7->currentIndex();
     m_stParam.indexMap[8] = ui.comboBox_8->currentIndex();
-}   
+}
+void SettingsDlg::on_btnClose_clicked()
+{
+    this->reject();
+}
+

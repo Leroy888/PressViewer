@@ -15,6 +15,8 @@ SerialWorker::SerialWorker(QObject* parent)
 
     m_pUpdateTimer = new QTimer(this);
     connect(m_pUpdateTimer,&QTimer::timeout,this,&SerialWorker::onUpdateTimeout);
+
+    initColorData();
 }
 
 SerialWorker::~SerialWorker()
@@ -130,6 +132,9 @@ void SerialWorker::processBuffer()
                     int step = (m_valueMap.value(key) - m_lastValueMap.value(key)) / UPDATE_NUM;
                     m_stepMap.insert(key, step);
                 }
+
+                updateShowColor();
+
                 m_pUpdateTimer->start(300 / UPDATE_NUM);
                 m_buffer.clear();
                 m_bPuase = true;
@@ -230,6 +235,105 @@ void SerialWorker::onUpdateTimeout()
     if(num == UPDATE_NUM){
         m_pUpdateTimer->stop();
         num = 0;
+    }
+
+    //------------------------»ìºÏÑÕÉ«
+    updateShowColor();
+    emit sigUpdateColor(m_realColorMap);
+}
+
+void SerialWorker::initColorData()
+{
+    int a = 255;
+    int step = 10;
+    m_colorMap.insert(0, QColor(222, 74, 63, a));
+    m_colorMap.insert(1, QColor(222, 100, 63, a-=step));
+    m_colorMap.insert(2, QColor(222, 123, 63, a -= step));
+    m_colorMap.insert(3, QColor(222, 145, 63, a -= step));
+
+    m_colorMap.insert(4, QColor(222, 171, 63, a -= step));
+    m_colorMap.insert(5, QColor(222, 190, 63, a -= step));
+    m_colorMap.insert(6, QColor(237, 231, 69, a -= step));
+    m_colorMap.insert(7, QColor(237, 199, 69, a -= step));
+    m_colorMap.insert(8, QColor(215, 204, 82, a -= step));
+
+    m_colorMap.insert(9, QColor(207, 215, 82, a -= step));
+    m_colorMap.insert(10, QColor(193, 197, 80, a -= step));
+    m_colorMap.insert(11, QColor(160, 197, 80, a -= step));
+    m_colorMap.insert(12, QColor(119, 197, 80, a -= step));
+    m_colorMap.insert(13, QColor(80, 197, 116, a -= step));
+    m_colorMap.insert(14, QColor(80, 197, 141, a -= step));
+
+    m_colorMap.insert(15, QColor(80, 197, 185, a -= step));
+    m_colorMap.insert(16, QColor(80, 179, 197, a -= step));
+    m_colorMap.insert(17, QColor(77, 168, 211, a -= step));
+    m_colorMap.insert(18, QColor(77, 143, 211, a -= step));
+    m_colorMap.insert(19, QColor(130, 170, 229, a -= step));
+
+}
+
+void SerialWorker::updateShowColor()
+{
+    for(int key : m_valueMap.keys())
+    {
+        int value = m_valueMap.value(key);
+        int level = PublicFunc::getColorLevel(value);
+        int colorCount = (m_colorMap.size() - level) > 4 ? 4 : (m_colorMap.size() - level);
+        int colorIndex = level;
+        QList<QColor> clrList;
+        for(int i=level; i < m_colorMap.size(); i++)
+        {
+            QColor clr = m_colorMap.value(colorIndex + colorCount -1 - i);
+            clrList.append(clr);
+        }
+        for(int i=clrList.length(); i<colorCount; i++)
+        {
+            clrList.append(m_colorMap.value(100));
+        }
+        m_showColorMap.insert(key, clrList);
+    }
+
+    for(int key : m_valueMap.keys())
+    {
+        int value = m_valueMap.value(key);
+        int level = PublicFunc::getColorLevel(value);
+        int colorCount = (m_colorMap.size() - level) > 4 ? 4 : (m_colorMap.size() - level);
+        int colorIndex = level;
+        QList<QColor> clrList;
+        for(int i=level; i < m_colorMap.size(); i++)
+        {
+            QColor clr = m_colorMap.value(colorIndex + colorCount -1 - i);
+            clrList.append(clr);
+        }
+        for(int i=clrList.length(); i< 4 ; i++)
+        {
+            clrList.append(m_colorMap.value(100));
+        }
+        m_lastShowColorMap.insert(key, clrList);
+    }
+}
+
+void SerialWorker::updateColor()
+{
+    static int num = 0;
+    ++num;
+    float stp = 1.0 /( (float)m_stParam.nReadTime / (float)m_stParam.nDelayTime);
+    for(int key : m_showColorMap.keys())
+    {
+        QList<QColor> clrList1 = m_lastShowColorMap.value(key);
+        QList<QColor> clrList2 = m_showColorMap.value(key);
+        QList<QColor> clrList;
+        for(int i = 0; i< clrList1.length(); i++)
+        {
+            float value = num*stp;
+            QColor m_color1 = clrList1.at(i);
+            QColor m_color2 = clrList2.at(i);
+            int r = m_color1.red()*(1 -value) + m_color2.red()*value;
+            int g = m_color1.green()*(1 -value) + m_color2.green()*value;
+            int b = m_color1.blue()*(1 -value) + m_color2.blue()*value;
+            clrList.append(QColor(r, g, b));
+        }
+        m_realColorMap.insert(key, clrList);
     }
 }
 
