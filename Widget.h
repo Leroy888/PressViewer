@@ -9,6 +9,7 @@
 #include <QMap>
 #include <QMouseEvent>
 #include <QThread>
+#include "SettingsDlg.h"
 
 class QTimer;
 class QVariantAnimation;
@@ -35,7 +36,6 @@ public:
 
 protected:
     void initUi();
-    void initPort();
     QStringList getSerialPortList();
 
     void paintEvent(QPaintEvent *event) override ;
@@ -47,11 +47,8 @@ protected:
     void initValues();
     int getColorLevel(int value);
     void initAnimMap();
-    void processFixedLengthData(const QByteArray& data);
-    void parsePacketData(const QByteArray& strData);
 
 protected slots:
-    void onReciveData();
     void onTimeout();
     void onAnimationValueChanged(const QVariant& value);
     void onUpdateData(QMap<int, int> valueMap);
@@ -63,6 +60,8 @@ private slots:
     void on_btnClose_clicked();
 
     void on_btnClosePort_clicked();
+
+    void on_btnSettings_clicked();
 
 signals:
     void sigOpenPort();
@@ -86,5 +85,7 @@ private:
     QThread* m_serialThread;
     SerialWorker* m_serialWorker;
     bool m_bOpened;
+
+    ST_ViewParam m_stParams;
 };
 #endif // WIDGET_H

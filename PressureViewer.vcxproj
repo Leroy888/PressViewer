@@ -202,6 +202,7 @@
     <ClCompile Include="DataWork.cpp" />
     <ClCompile Include="PublicFunc.cpp" />
     <ClCompile Include="SerialWorker.cpp" />
+    <ClCompile Include="SettingsDlg.cpp" />
     <ClCompile Include="Widget.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
@@ -226,6 +227,7 @@
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
+    <QtUic Include="SettingsDlg.ui" />
     <QtUic Include="Widget.ui" />
   </ItemGroup>
   <ItemGroup>
@@ -252,6 +254,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="PublicFunc.h" />
+    <QtMoc Include="SettingsDlg.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <Import Project="$(QtMsBuild)\qt.targets" Condition="Exists('$(QtMsBuild)\qt.targets')" />

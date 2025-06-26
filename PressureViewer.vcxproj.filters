@@ -75,6 +75,9 @@
     <ClCompile Include="PublicFunc.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="SettingsDlg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="ColorHelper.h">
@@ -89,6 +92,9 @@
     <QtMoc Include="SerialWorker.h">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <QtMoc Include="SettingsDlg.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="debug\moc_predefs.h.cbt">
@@ -100,6 +106,9 @@
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="Widget.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="SettingsDlg.ui">
       <Filter>Form Files</Filter>
     </QtUic>
   </ItemGroup>
@@ -133,6 +142,7 @@
     <None Include="res\etc\qt.conf">
       <Filter>Distribution Files</Filter>
     </None>
+    <None Include="res\etc\qt.conf" />
     <None Include="res\etc\qt.conf" />
   </ItemGroup>
   <ItemGroup>

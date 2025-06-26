@@ -13,10 +13,7 @@
 #include <QMessageBox>
 #include "SerialWorker.h"
 #include "PublicFunc.h"
-
-const int PACKET_DATA_SIZE = 247; // 假设每个数据包字节
-const int CHECK_DATA_SIZE = 237;
-
+#include "SettingsDlg.h"
 
 
 Widget::Widget(QWidget *parent)
@@ -86,10 +83,7 @@ void Widget::initUi()
     setAttribute(Qt::WA_StaticContents);
     //setStyleSheet("background: #00FFFF;"); // 如果需要样式表
 
-    //设置无边框
     this->setWindowFlags(this->windowFlags() | Qt::FramelessWindowHint);
-    //实例阴影shadow
-
     //实例阴影shadow
     QGraphicsDropShadowEffect *shadow = new QGraphicsDropShadowEffect(this);
     //设置阴影距离
@@ -100,30 +94,8 @@ void Widget::initUi()
     shadow->setBlurRadius(10);
     //给嵌套QWidget设置阴影
     this->setGraphicsEffect(shadow);
-}
 
-void Widget::initPort()
-{
-    QString strSerialPort = ui->cmbBox_port->currentText();
-    if (m_serialPort.isOpen())
-    {
-        m_serialPort.clear();
-        m_serialPort.close();
-    }
-
-    m_serialPort.setPortName(strSerialPort);
-    m_serialPort.setBaudRate(QSerialPort::Baud115200, QSerialPort::AllDirections);
-    m_serialPort.setDataBits(QSerialPort::Data8);
-    m_serialPort.setFlowControl(QSerialPort::NoFlowControl);
-    m_serialPort.setParity(QSerialPort::NoParity);
-    m_serialPort.setStopBits(QSerialPort::OneStop);
-    connect(&m_serialPort, &QSerialPort::readyRead, this, &Widget::onReciveData);
-    if (!m_serialPort.open(QIODevice::ReadOnly))
-    {
-        QMessageBox::information(this, tr("Tips"), tr("Failed to open the serialport"));
-        return;
-    }
-    ui->btnOpen->setEnabled(false);
+    ui->btnClosePort->setVisible(false);
 }
 
 QStringList Widget::getSerialPortList()
@@ -135,105 +107,6 @@ QStringList Widget::getSerialPortList()
     }
 
     return serialPortList;
-}
-
-void Widget::onReciveData()
-{
-    QByteArray strData = m_serialPort.readAll();
-    qDebug() << "data:" << strData.toHex();
-
-    processFixedLengthData(strData);
-}
-
-void Widget::processFixedLengthData(const QByteArray& data)
-{
-    static QByteArray buffer;
-
-    buffer.append(data);
-
-    while (buffer.size() >= PACKET_DATA_SIZE) {
-        uint8_t address = static_cast<uint8_t>(buffer[0]);
-        if (buffer.at(0) != 0x3C || buffer.at(1) != 0x3C) {
-            buffer.remove(0, 1);
-            continue;
-        }
-
-        // 检查功能码是否有效
-        uint8_t functionCode = static_cast<uint8_t>(buffer[1]);
-        if (functionCode > 0x2B) { 
-            buffer.remove(0, 2);
-            continue;
-        }
-
-        QByteArray packet = buffer.left(PACKET_DATA_SIZE);
-        buffer.remove(0, PACKET_DATA_SIZE);
-
-        if (packet.at(0) == 0x3C && packet.at(1) == 0x3C && packet.at(PACKET_DATA_SIZE - 1) == 0x3C && packet.at(PACKET_DATA_SIZE - 2)) { 
-            QByteArray sumPacket = packet.right(CHECK_DATA_SIZE);
-            char checksum = PublicFunc::crc_16(reinterpret_cast<const  char*>(sumPacket.constData()), CHECK_DATA_SIZE);
-            char realSum = PublicFunc::getValue(packet.at(PACKET_DATA_SIZE - -4), packet.at(PACKET_DATA_SIZE - -3));
-            if (checksum == realSum) { // 校验和验证
-                parsePacketData(packet);
-
-                update();
-            }
-
-        }
-    }
-}
-
-void Widget::parsePacketData(const QByteArray& strData)
-{
-    int index = 9;
-    for (int i = 0; i < 9; ++i)
-    {
-        if (2 == i)
-        {
-            int value = PublicFunc::getValue(strData[i * 13 * 2 + 3 * 2 + index], strData[i * 13 * 2 + 3 * 2 + 1 + index]);
-            value = value < 100 ? 100 : value;
-            value = value > 700 ? 700 : value;
-            m_valueMap.insert(i, value);
-            m_valueMap.insert(1, value);
-        }
-        else if (3 == i)
-        {
-            int value = PublicFunc::getValue(strData[i * 13 * 2 + 0 * 2 + index], strData[i * 13 * 2 + 0 * 2 + 1 + index]);
-            value = value < 100 ? 100 : value;
-            value = value > 700 ? 700 : value;
-            m_valueMap.insert(i, value);
-        }
-        else if (5 == i || 6 == i)
-        {
-            int value = PublicFunc::getValue(strData[i * 13 * 2 + 2 * 2 + index], strData[i * 13 * 2 + 2 * 2 + 1 + index]);
-            value = value < 100 ? 100 : value;
-            value = value > 700 ? 700 : value;
-            m_valueMap.insert(i, value);
-        }
-        else if (7 == i)
-        {
-            int value = PublicFunc::getValue(strData[i * 13 * 2 + 8 * 2 + index], strData[i * 13 * 2 + 8 * 2 + 1 + index]);
-            value = value < 100 ? 100 : value;
-            value = value > 700 ? 700 : value;
-            m_valueMap.insert(i, value);
-        }
-        else if (1 == i || 4 == i)
-            continue;
-        else
-        {
-            int value = PublicFunc::getValue(strData[i * 13 * 2 + 5 * 2 + index], strData[i * 13 * 2 + 5 * 2 + 1 + index]);
-            value = value < 100 ? 100 : value;
-            value = value > 700 ? 700 : value;
-            m_valueMap.insert(1, value);
-        }
-        /* int sum = 0;
-         for(int j= 0; j<12; j+=2)
-         {
-             sum += getValue(strData[i*13 + j], strData[i*13 + j+1]);
-         }
-         m_valueMap.insert(i, sum / 12);
-         if(2 == i)
-             m_valueMap.insert(1, sum / 12);*/
-    }
 }
 
 void Widget::paintEvent(QPaintEvent *event)
@@ -255,8 +128,11 @@ void Widget::paintEvent(QPaintEvent *event)
         // if (it != m_areaMap.begin())
         //     continue;
 
-        QRect rect = it.value();
         int key = it.key();
+        if (!m_stParams.showValueMap.value(key))
+            continue;
+
+        QRect rect = it.value();
         int radio = rect.width() > rect.height() ? rect.width() / 2 : rect.height() / 2;
         QRadialGradient radialGrad(rect.x() + rect.width() / 2, rect.y() + rect.height() / 2,
                                     rect.width() > rect.height() ? rect.width() / 2 : rect.height() / 2);
@@ -404,19 +280,30 @@ void Widget::initValues()
 {
     m_valueMap.insert(0, 100);
     m_valueMap.insert(3, 100);
-
     m_valueMap.insert(5, 100);
+    m_valueMap.insert(6, 100);
+    m_valueMap.insert(7, 100);
+    m_valueMap.insert(8, 100);
+    m_valueMap.insert(1, 100);
+    m_valueMap.insert(2, 100);
 
-   m_valueMap.insert(6, 100);
+    m_stParams.indexMap.insert(0, 5);
+    m_stParams.indexMap.insert(1, 4);
+    m_stParams.indexMap.insert(2, 4);
+    m_stParams.indexMap.insert(3, 0);
+    m_stParams.indexMap.insert(5, 0);
+    m_stParams.indexMap.insert(6, 7);
+    m_stParams.indexMap.insert(7, 3);
+    m_stParams.indexMap.insert(8, 3);
 
-   m_valueMap.insert(7, 100);
-
-   m_valueMap.insert(8, 100);
-
-   m_valueMap.insert(1, 100);
-
-   m_valueMap.insert(2, 100);
-
+    m_stParams.showValueMap.insert(0, true);
+    m_stParams.showValueMap.insert(1, true);
+    m_stParams.showValueMap.insert(2, true);
+    m_stParams.showValueMap.insert(3, true);
+    m_stParams.showValueMap.insert(5, true);
+    m_stParams.showValueMap.insert(6, true);
+    m_stParams.showValueMap.insert(7, true);
+    m_stParams.showValueMap.insert(8, true);
 }
 
 int Widget::getColorLevel(int value)
@@ -564,14 +451,26 @@ void Widget::onPortOpened(bool success)
     }
     else
     {
-        ui->btnClosePort->setVisible(true);;
+        ui->btnClosePort->setVisible(true);
+        ui->btnOpen->setVisible(false);
     }
     m_bOpened = success;
 }
 
-
 void Widget::on_btnClosePort_clicked()
 {
+    emit sigClosePort();
+    ui->btnOpen->setVisible(true);
+    ui->btnClosePort->setVisible(false);
+}
 
+void Widget::on_btnSettings_clicked()
+{
+    SettingsDlg dlg(m_stParams, this);
+    if(QDialog::Accepted == dlg.exec())
+    {
+        m_stParams = dlg.GetParams();
+        m_serialWorker->SetParams(m_stParams);
+    }
 }
 

@@ -2,7 +2,16 @@
 
 #include <stdint.h>
 #include <QByteArray>
+#include <QMap>
 
+
+struct ST_ViewParam
+{
+	int nReadTime = 300;
+	int nDelayTime = 30;
+	QMap<int, bool> showValueMap;
+	QMap<int, int> indexMap;
+};
 
 class PublicFunc
 {

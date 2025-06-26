@@ -33,6 +33,11 @@ void SerialWorker::setBaudRate(int baudRate)
     m_baudRate = baudRate;
 }
 
+void SerialWorker::SetParams(const ST_ViewParam& stParam)
+{
+    m_stParam = stParam;
+}
+
 void SerialWorker::openPort()
 {
     if (!m_serialPort) {
@@ -139,9 +144,10 @@ void SerialWorker::parsePacketData(const QByteArray& strData)
     int index = 9;
     for (int i = 0; i < 9; ++i)
     {
+        int nColmn = m_stParam.indexMap.value(i);
         if (2 == i)
         {
-            int value = PublicFunc::getValue(strData[i * 13 * 2 + 4 * 2 + index], strData[i * 13 * 2 + 4 * 2 + 1 + index]);
+            int value = PublicFunc::getValue(strData[i * 13 * 2 + nColmn * 2 + index], strData[i * 13 * 2 + nColmn * 2 + 1 + index]);
            // qDebug()<<"1 row value:"<<value;
             value = value < 100 ? 100 : value;
             value = value > 700 ? 700 : value;
@@ -150,7 +156,7 @@ void SerialWorker::parsePacketData(const QByteArray& strData)
         }
         else if (3 == i)
         {
-            int value = PublicFunc::getValue(strData[i * 13 * 2 + 0 * 2 + index], strData[i * 13 * 2 + 0 * 2 + 1 + index]);
+            int value = PublicFunc::getValue(strData[i * 13 * 2 + nColmn * 2 + index], strData[i * 13 * 2 + nColmn * 2 + 1 + index]);
            // qDebug()<<"3 row value:"<<value;
             value = value < 100 ? 100 : value;
             value = value > 700 ? 700 : value;
@@ -160,7 +166,7 @@ void SerialWorker::parsePacketData(const QByteArray& strData)
         {
             QByteArray tmpArry = strData.mid(i * 13 * 2+ index, i * 13 * 3+ index);
            // qDebug()<<i<<" tmpArry:"<<tmpArry.toHex();
-            int value = PublicFunc::getValue(strData[i * 13 * 2 + 0 * 2 + index], strData[i * 13 * 2 + 0 * 2 + 1 + index]);
+            int value = PublicFunc::getValue(strData[i * 13 * 2 + nColmn * 2 + index], strData[i * 13 * 2 + nColmn * 2 + 1 + index]);
            // qDebug()<<i<<" row value:"<<value;
             value = value < 100 ? 100 : value;
             value = value > 700 ? 700 : value;
@@ -185,7 +191,7 @@ void SerialWorker::parsePacketData(const QByteArray& strData)
         }
         else if (7 == i | 8 == i)
         {
-            int value = PublicFunc::getValue(strData[i * 13 * 2 + 3 * 2 + index], strData[i * 13 * 2 + 3 * 2 + 1 + index]);
+            int value = PublicFunc::getValue(strData[i * 13 * 2 + nColmn * 2 + index], strData[i * 13 * 2 + nColmn * 2 + 1 + index]);
          //   qDebug()<<i<<" row value:"<<value;
             value = value < 100 ? 100 : value;
             value = value > 700 ? 700 : value;
@@ -195,7 +201,7 @@ void SerialWorker::parsePacketData(const QByteArray& strData)
             continue;
         else
         {
-            int value = PublicFunc::getValue(strData[i * 13 * 2 + 5 * 2 + index], strData[i * 13 * 2 + 5 * 2 + 1 + index]);
+            int value = PublicFunc::getValue(strData[i * 13 * 2 + nColmn * 2 + index], strData[i * 13 * 2 + nColmn * 2 + 1 + index]);
          //   qDebug()<<i<<" row value:"<<value;
             value = value < 100 ? 100 : value;
             value = value > 700 ? 700 : value;

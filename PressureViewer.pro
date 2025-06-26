@@ -12,6 +12,7 @@ SOURCES += \
     ColorHelper.cpp \
     PublicFunc.cpp \
     SerialWorker.cpp \
+    SettingsDlg.cpp \
     main.cpp \
     Widget.cpp
 
@@ -20,9 +21,11 @@ HEADERS += \
     Func.h \
     PublicFunc.h \
     SerialWorker.h \
+    SettingsDlg.h \
     Widget.h
 
 FORMS += \
+    SettingsDlg.ui \
     Widget.ui
 
 # Default rules for deployment.

@@ -17,6 +17,7 @@ public:
     void setPortName(const QString& portName);
     void setBaudRate(int baudRate);
     void parsePacketData(const QByteArray& strData);
+    void SetParams(const ST_ViewParam& stParam);
 
 public slots:
     void openPort();
@@ -45,6 +46,8 @@ private:
     bool m_bPuase;
     QTimer* m_pUpdateTimer;
     QMap<int, int> m_stepMap;
+
+    ST_ViewParam m_stParam;
 
     void processBuffer();
 };
