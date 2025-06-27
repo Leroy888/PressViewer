@@ -146,10 +146,11 @@ void SerialWorker::parsePacketData(const QByteArray& strData)
     int index = 9;
     for (int i = 0; i < 9; ++i)
     {
+        int colNum = 12;
         int nColmn = m_stParam.indexMap.value(i);
         if (2 == i)
         {
-            int value = PublicFunc::getValue(strData[i * 13 * 2 + nColmn * 2 + index], strData[i * 13 * 2 + nColmn * 2 + 1 + index]);
+            int value = PublicFunc::getValue(strData[i * colNum * 2 + nColmn * 2 + index], strData[i * colNum * 2 + nColmn * 2 + 1 + index]);
            // qDebug()<<"1 row value:"<<value;
             value = value < 100 ? 100 : value;
             value = value > 700 ? 700 : value;
@@ -158,7 +159,7 @@ void SerialWorker::parsePacketData(const QByteArray& strData)
         }
         else if (3 == i)
         {
-            int value = PublicFunc::getValue(strData[i * 13 * 2 + nColmn * 2 + index], strData[i * 13 * 2 + nColmn * 2 + 1 + index]);
+            int value = PublicFunc::getValue(strData[i * colNum * 2 + nColmn * 2 + index], strData[i * colNum * 2 + nColmn * 2 + 1 + index]);
            // qDebug()<<"3 row value:"<<value;
             value = value < 100 ? 100 : value;
             value = value > 700 ? 700 : value;
@@ -166,7 +167,7 @@ void SerialWorker::parsePacketData(const QByteArray& strData)
         }
         else if (5 == i)
         {
-            QByteArray tmpArry = strData.mid(i * 13 * 2+ index, i * 13 * 3+ index);
+            QByteArray tmpArry = strData.mid(i * colNum * 2+ index, i * colNum * 3+ index);
            // qDebug()<<i<<" tmpArry:"<<tmpArry.toHex();
             int value = PublicFunc::getValue(strData[i * 13 * 2 + nColmn * 2 + index], strData[i * 13 * 2 + nColmn * 2 + 1 + index]);
            // qDebug()<<i<<" row value:"<<value;
@@ -174,10 +175,10 @@ void SerialWorker::parsePacketData(const QByteArray& strData)
             value = value > 700 ? 700 : value;
             m_valueMap.insert(i, value);
         }
-        else if ( 4 == i)
+        else if ( 6 == i)
         {
-            QByteArray tmpArry = strData.mid(i * 13 * 2+ index, i * 13 * 2 + 26 + index);
-            qDebug()<<i<<" tmpArry:"<<tmpArry;
+           // QByteArray tmpArry = strData.mid(i * 13 * 2+ index, i * 13 * 2 + 26 + index);
+          //  qDebug()<<i<<" tmpArry:"<<tmpArry;
             int value =0;
             // for(int j = 12; j<13 ; ++j){
             //     qDebug()<<i<<" tmpArry: value1:"<<strData[i * 13 * 2 + j * 2 + index]<<"  value2:"<<strData[i * 13 * 2 + j * 2 + 1 + index];
@@ -186,7 +187,7 @@ void SerialWorker::parsePacketData(const QByteArray& strData)
             //     if(value > 0)
             //        break;
             // }
-            value = PublicFunc::getValue(strData[i * 13 * 2 + nColmn * 2 + index], strData[i * 13 * 2 + nColmn * 2 + 1 + index]);
+            value = PublicFunc::getValue(strData[i * colNum * 2 + nColmn * 2 + index], strData[i * colNum * 2 + nColmn * 2 + 1 + index]);
 
            qDebug()<<i<<" row value:"<<value;
             value = value < 100 ? 100 : value;
@@ -195,17 +196,17 @@ void SerialWorker::parsePacketData(const QByteArray& strData)
         }
         else if (7 == i | 8 == i)
         {
-            int value = PublicFunc::getValue(strData[i * 13 * 2 + nColmn * 2 + index], strData[i * 13 * 2 + nColmn * 2 + 1 + index]);
+            int value = PublicFunc::getValue(strData[i * colNum * 2 + nColmn * 2 + index], strData[i * colNum * 2 + nColmn * 2 + 1 + index]);
          //   qDebug()<<i<<" row value:"<<value;
             value = value < 100 ? 100 : value;
             value = value > 700 ? 700 : value;
             m_valueMap.insert(i, value);
         }
-        else if (1 == i || 6 == i)
+        else if (1 == i || 4 == i)
             continue;
         else
         {
-            int value = PublicFunc::getValue(strData[i * 13 * 2 + nColmn * 2 + index], strData[i * 13 * 2 + nColmn * 2 + 1 + index]);
+            int value = PublicFunc::getValue(strData[i * colNum * 2 + nColmn * 2 + index], strData[i * colNum * 2 + nColmn * 2 + 1 + index]);
          //   qDebug()<<i<<" row value:"<<value;
             value = value < 100 ? 100 : value;
             value = value > 700 ? 700 : value;
