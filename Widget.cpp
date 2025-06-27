@@ -337,27 +337,6 @@ m_animMap.clear();
         m_valueMap[key] = value;
         if (value <= 100)
             m_pTimer->stop();
-        int curValue = m_curValueMap.value(key);
-        QColor endColor = m_colorMap.value(PublicFunc::getColorLevel(curValue));
-        //update();
-
-     //   for (int aKey : m_animMap)
-        {
-       //     if (aKey == key)
-            {
-                // qDebug()<<"onTimeout key:"<<key<< "  aKey:"<<"aKey"<<" ----------------------";
-                // QVariantAnimation* pAnim = new QVariantAnimation(this);
-                // pAnim->setDuration(100);
-                // connect(pAnim, &QVariantAnimation::valueChanged, this, &Widget::onAnimationValueChanged);
-                // m_animMap.insert(pAnim, key);
-
-                // m_animMap.key(key)->stop();
-                // m_animMap.key(key)->setStartValue(startColor);
-                // m_animMap.key(key)->setEndValue(endColor);
-                // m_animMap.key(key)->start();
-                // break;
-            }
-        }
     }
 }
 
@@ -412,6 +391,17 @@ void Widget::on_btnClosePort_clicked()
     emit sigClosePort();
     ui->btnOpen->setVisible(true);
     ui->btnClosePort->setVisible(false);
+
+    m_valueMap.insert(0, 100);
+    m_valueMap.insert(3, 100);
+    m_valueMap.insert(5, 100);
+    m_valueMap.insert(6, 100);
+    m_valueMap.insert(7, 100);
+    m_valueMap.insert(8, 100);
+    m_valueMap.insert(1, 100);
+    m_valueMap.insert(2, 100);
+
+    update();
 }
 
 void Widget::on_btnSettings_clicked()

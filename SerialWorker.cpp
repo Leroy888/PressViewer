@@ -1,7 +1,7 @@
 #include "SerialWorker.h"
 #include <QDebug>
 
-const int PACKET_SIZE = 247; // 假设每个数据包字节
+const int PACKET_SIZE = 283; // 假设每个数据包字节
 const int CHECK_SIZE = 237;
 const int READ_TIME = 300;
 const float UPDATE_NUM = 10.0;
@@ -71,7 +71,7 @@ void SerialWorker::openPort()
         emit portOpened(false);
     }
 
-    m_pTimer->start(READ_TIME);
+    m_pTimer->start(m_stParam.nReadTime);
 }
 
 void SerialWorker::closePort()
@@ -115,13 +115,12 @@ void SerialWorker::processBuffer()
         QByteArray packet = m_buffer.left(PACKET_SIZE);
         m_buffer.remove(0, PACKET_SIZE);
        // qDebug()<<"packet size:"<<packet.size()<< " packet:"<<packet.toHex();
-        if (packet.at(0) == 0x3C && packet.at(1) == 0x3C) /*&& packet.at(PACKET_SIZE - 1) == 0x3E && 0x3E == packet.at(PACKET_SIZE - 2))*/ {
+        if (packet.at(0) == 0x3C && packet.at(1) == 0x3C ) /*&& packet.at(PACKET_SIZE - 1) == 0x3E && 0x3E == packet.at(PACKET_SIZE - 2))*/ {
             QByteArray sumPacket = packet.right(CHECK_SIZE);
            // char checksum = PublicFunc::crc_16(reinterpret_cast<const  char*>(sumPacket.constData()), CHECK_SIZE);
            // char realSum = PublicFunc::getValue(packet.at(PACKET_SIZE - -4), packet.at(PACKET_SIZE - -3));
            // qDebug()<<"checkSum:"<<checksum<<"  realSum:"<<realSum;
-           // qDebug()<<"--------------------";
-           // if (checksum == realSum)
+
             { // 校验和验证
                 parsePacketData(packet);
                 //sigUpdateData(m_valueMap);
@@ -129,13 +128,11 @@ void SerialWorker::processBuffer()
                     m_lastValueMap = m_valueMap;
                 for(int key : m_valueMap.keys())
                 {
-                    int step = (m_valueMap.value(key) - m_lastValueMap.value(key)) / UPDATE_NUM;
+                    int step = (m_valueMap.value(key) - m_lastValueMap.value(key)) / m_stParam.nDelayTime;
                     m_stepMap.insert(key, step);
                 }
 
-                updateShowColor();
-
-                m_pUpdateTimer->start(300 / UPDATE_NUM);
+                m_pUpdateTimer->start(m_stParam.nDelayTime);
                 m_buffer.clear();
                 m_bPuase = true;
             }
@@ -177,22 +174,24 @@ void SerialWorker::parsePacketData(const QByteArray& strData)
             value = value > 700 ? 700 : value;
             m_valueMap.insert(i, value);
         }
-        else if ( 6 == i)
+        else if ( 4 == i)
         {
             QByteArray tmpArry = strData.mid(i * 13 * 2+ index, i * 13 * 2 + 26 + index);
             qDebug()<<i<<" tmpArry:"<<tmpArry;
             int value =0;
-            for(int j = 0; j<12 ; ++j){
-                qDebug()<<i<<" tmpArry: value1:"<<strData[i * 13 * 2 + j * 2 + index]<<"  value2:"<<strData[i * 13 * 2 + j * 2 + 1 + index];
-               value = PublicFunc::getValue(strData[i * 13 * 2 + j * 2 + index], strData[i * 13 * 2 + j * 2 + 1 + index]);
-                qDebug()<<"---------value:"<<value;
-                if(value > 0)
-                   break;
-            }
+            // for(int j = 12; j<13 ; ++j){
+            //     qDebug()<<i<<" tmpArry: value1:"<<strData[i * 13 * 2 + j * 2 + index]<<"  value2:"<<strData[i * 13 * 2 + j * 2 + 1 + index];
+            //    value = PublicFunc::getValue(strData[i * 13 * 2 + j * 2 + index], strData[i * 13 * 2 + j * 2 + 1 + index]);
+            //     qDebug()<<"---------value:"<<value;
+            //     if(value > 0)
+            //        break;
+            // }
+            value = PublicFunc::getValue(strData[i * 13 * 2 + nColmn * 2 + index], strData[i * 13 * 2 + nColmn * 2 + 1 + index]);
+
            qDebug()<<i<<" row value:"<<value;
             value = value < 100 ? 100 : value;
             value = value > 700 ? 700 : value;
-            m_valueMap.insert(i, value);
+            m_valueMap.insert(6, value);
         }
         else if (7 == i | 8 == i)
         {
@@ -202,7 +201,7 @@ void SerialWorker::parsePacketData(const QByteArray& strData)
             value = value > 700 ? 700 : value;
             m_valueMap.insert(i, value);
         }
-        else if (1 == i || 4 == i)
+        else if (1 == i || 6 == i)
             continue;
         else
         {
@@ -232,14 +231,10 @@ void SerialWorker::onUpdateTimeout()
     }
     emit sigUpdateData(m_valueMap);
     ++num;
-    if(num == UPDATE_NUM){
+    if(num == m_stParam.nReadTime / m_stParam.nDelayTime){
         m_pUpdateTimer->stop();
         num = 0;
     }
-
-    //------------------------混合颜色
-    updateShowColor();
-    emit sigUpdateColor(m_realColorMap);
 }
 
 void SerialWorker::initColorData()
