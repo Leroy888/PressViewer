@@ -122,8 +122,8 @@ void Widget::paintEvent(QPaintEvent *event)
     painter.fillRect(ui->widget->geometry(), Qt::white);
     painter.drawImage(ui->label->geometry(), QImage(":/images/images/chair.png"));
 
-    if(!m_bOpened)
-        return;
+    // if(!m_bOpened)
+    //     return;
     for(QMap<int, QRect>::iterator it = m_areaMap.begin(); it != m_areaMap.end(); ++it)
     {
         // if (it != m_areaMap.begin())
@@ -161,10 +161,11 @@ void Widget::paintEvent(QPaintEvent *event)
             radialGrad.setColorAt(1 - j*step, m_colorMap.value(colorIndex + colorCount -1 - j));
             QPoint pt = QPoint(rect.x() + j * wStep, rect.y() + j * hStep);
             QRect tmprect = QRect(rect.x() + j * wStep / 2, rect.y() + j * hStep / 2, rect.width() - (j * wStep), rect.height() - (j * hStep));
-         
+            qreal xRadius = tmprect.width() * 0.4;          // 水平方向圆角半径
+            qreal yRadius = tmprect.height() * 0.2;
             painter.setBrush(radialGrad); // 设置画笔的填充颜色为渐变
             painter.setPen(Qt::NoPen); // 不绘制边框
-            painter.drawEllipse(tmprect); // 绘制椭圆，填充渐变色
+            painter.drawRoundedRect(tmprect, xRadius, yRadius); // 绘制椭圆，填充渐变色
          //   qDebug()<<"key:"<<key << " tmpRect:" << tmprect << "  colorIndex:" << colorIndex <<"  colorCount:" << colorCount << "   color:" << clr;
             ++colorIndex;
             ++j;
@@ -200,36 +201,38 @@ void Widget::mouseMoveEvent(QMouseEvent *event)
 
 void Widget::initData()
 {
-    QRect rect = QRect((ui->label->geometry().x() +  ui->label->width() * 0.49) ,
-                       (ui->label->geometry().y() +  ui->label->height() * 0.25), ui->label->width() * 0.107, ui->label->height() * 0.185);
+    //后背
+    QRect rect = QRect((ui->label->geometry().x() +  ui->label->width() * 0.4405) ,
+                       (ui->label->geometry().y() +  ui->label->height() * 0.25), ui->label->width() * 0.21, ui->label->height() * 0.11);
     m_areaMap.insert(0, rect);
 
-    rect = QRect((ui->label->geometry().x() +  ui->label->width() * 0.49) ,
-                 ui->label->height() * 0.5, ui->label->width() * 0.107, ui->label->height() * 0.128);
+    //腰部
+    rect = QRect((ui->label->geometry().x() +  ui->label->width() * 0.4412) ,
+                 ui->label->height() * 0.413, ui->label->width() * 0.205, ui->label->height() * 0.205);
     m_areaMap.insert(3, rect);
-
-    rect = QRect((ui->label->geometry().x() +  ui->label->width() * 0.37) ,
-                 (ui->label->geometry().y() +  ui->label->height() * 0.37), ui->label->width() * 0.053, ui->label->height() * 0.164);
+    //右边
+    rect = QRect((ui->label->geometry().x() +  ui->label->width() * 0.39) ,
+                 (ui->label->geometry().y() +  ui->label->height() * 0.38), ui->label->width() * 0.043, ui->label->height() * 0.18);
     m_areaMap.insert(5, rect);
-
-    rect = QRect((ui->label->geometry().x() +  ui->label->width() * 0.67) ,
-                 (ui->label->geometry().y() +  ui->label->height() * 0.37), ui->label->width() * 0.053, ui->label->height() * 0.164);
+    //左边
+    rect = QRect((ui->label->geometry().x() +  ui->label->width() * 0.66) ,
+                 (ui->label->geometry().y() +  ui->label->height() * 0.38), ui->label->width() * 0.043, ui->label->height() * 0.18);
     m_areaMap.insert(6, rect);
-
-    rect = QRect((ui->label->geometry().x() +  ui->label->width() * 0.41) ,
-                 (ui->label->geometry().y() +  ui->label->height() * 0.6), ui->label->width() * 0.107, ui->label->height() * 0.107);
-    m_areaMap.insert(7, rect);
-
-    rect = QRect((ui->label->geometry().x() +  ui->label->width() * 0.57) ,
-                 (ui->label->geometry().y() +  ui->label->height() * 0.6), ui->label->width() * 0.107, ui->label->height() * 0.107);
-    m_areaMap.insert(8, rect);
-
+    //右边臀部
     rect = QRect((ui->label->geometry().x() +  ui->label->width() * 0.37) ,
-                 (ui->label->geometry().y() +  ui->label->height() * 0.72), ui->label->width() * 0.107, ui->label->height() * 0.1);
+                 (ui->label->geometry().y() +  ui->label->height() * 0.61), ui->label->width() * 0.175, ui->label->height() * 0.11);
+    m_areaMap.insert(7, rect);
+    //左边臀部
+    rect = QRect((ui->label->geometry().x() +  ui->label->width() * 0.55) ,
+                 (ui->label->geometry().y() +  ui->label->height() * 0.61), ui->label->width() * 0.175, ui->label->height() * 0.11);
+    m_areaMap.insert(8, rect);
+    //右腿
+    rect = QRect((ui->label->geometry().x() +  ui->label->width() * 0.34) ,
+                 (ui->label->geometry().y() +  ui->label->height() * 0.725), ui->label->width() * 0.195, ui->label->height() * 0.11);
     m_areaMap.insert(1, rect);
-
-    rect = QRect((ui->label->geometry().x() +  ui->label->width() * 0.60) ,
-                 (ui->label->geometry().y() +  ui->label->height() * 0.72), ui->label->width() * 0.107, ui->label->height() * 0.1);
+    //左腿
+    rect = QRect((ui->label->geometry().x() +  ui->label->width() * 0.55) ,
+                 (ui->label->geometry().y() +  ui->label->height() * 0.725), ui->label->width() * 0.195, ui->label->height() * 0.11);
     m_areaMap.insert(2, rect);
 
     for(int i=0; i<9; ++i)
@@ -279,23 +282,24 @@ void Widget::initColorData()
 
 void Widget::initValues()
 {
-    m_valueMap.insert(0, 100);
-    m_valueMap.insert(3, 100);
-    m_valueMap.insert(5, 100);
-    m_valueMap.insert(6, 100);
-    m_valueMap.insert(7, 100);
-    m_valueMap.insert(8, 100);
-    m_valueMap.insert(1, 100);
-    m_valueMap.insert(2, 100);
+    int value = 600;
+    m_valueMap.insert(0, value);
+    m_valueMap.insert(3, value);
+    m_valueMap.insert(5, value);
+    m_valueMap.insert(6, value);
+    m_valueMap.insert(7, value);
+    m_valueMap.insert(8, value);
+    m_valueMap.insert(1, value);
+    m_valueMap.insert(2, value);
 
     m_stParams.indexMap.insert(0, 5);
     m_stParams.indexMap.insert(1, 4);
     m_stParams.indexMap.insert(2, 4);
     m_stParams.indexMap.insert(3, 0);
     m_stParams.indexMap.insert(5, 0);
-    m_stParams.indexMap.insert(6, 7);
-    m_stParams.indexMap.insert(7, 3);
-    m_stParams.indexMap.insert(8, 3);
+    m_stParams.indexMap.insert(6, 0);
+    m_stParams.indexMap.insert(7, 11);
+    m_stParams.indexMap.insert(8, 11);
 
     m_stParams.showValueMap.insert(0, true);
     m_stParams.showValueMap.insert(1, true);
