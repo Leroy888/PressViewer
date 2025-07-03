@@ -5,6 +5,7 @@
 #include <QScreen>
 #include <QGraphicsDropShadowEffect>
 #include <QTimer>
+#include <QPainterPath>
 #include <QDebug>
 #include <windows.h>
 #include <wingdi.h>
@@ -165,7 +166,31 @@ void Widget::paintEvent(QPaintEvent *event)
             qreal yRadius = tmprect.height() * 0.2;
             painter.setBrush(radialGrad); // 设置画笔的填充颜色为渐变
             painter.setPen(Qt::NoPen); // 不绘制边框
-            painter.drawRoundedRect(tmprect, xRadius, yRadius); // 绘制椭圆，填充渐变色
+            if(1 == key)
+            {
+                xRadius = tmprect.width() * 0.4;
+                drawRoundedRectTopLeft(&painter, tmprect, xRadius);
+            }
+            else if(2 == key)
+            {
+                xRadius = tmprect.width() * 0.4;
+                drawRoundedRectTopRight(&painter, tmprect, xRadius);
+            }
+            else if(7 == key)
+            {
+                xRadius = tmprect.width() * 0.47;
+                drawRoundedRectTopLeft(&painter, tmprect, xRadius);
+            }
+            else if(8 == key)
+            {
+                xRadius = tmprect.width() * 0.47;
+                drawRoundedRectTopRight(&painter, tmprect, xRadius);
+            }
+            else
+                painter.drawRoundedRect(tmprect, xRadius, yRadius); // 绘制椭圆，填充渐变色
+
+            //drawRoundedRectTopRight(&painter, tmprect, xRadius);
+
          //   qDebug()<<"key:"<<key << " tmpRect:" << tmprect << "  colorIndex:" << colorIndex <<"  colorCount:" << colorCount << "   color:" << clr;
             ++colorIndex;
             ++j;
@@ -177,6 +202,52 @@ void Widget::paintEvent(QPaintEvent *event)
   //  qDebug() << "update ----------------------------------------------------------------------------:";
 
 }
+
+void Widget::drawRoundedRectTopLeft(QPainter *painter, const QRect &rect, int radius)
+{
+    QPainterPath path;
+
+    // 从左上角圆角开始
+    path.moveTo(rect.left() + radius, rect.top());
+
+    // 上边线
+    path.lineTo(rect.right(), rect.top());
+
+    // 右边线
+    path.lineTo(rect.right(), rect.bottom());
+
+    // 下边线
+    path.lineTo(rect.left(), rect.bottom());
+
+    // 左边线
+    path.lineTo(rect.left(), rect.top() + radius);
+
+    // 左上角圆角
+    path.arcTo(rect.left(), rect.top(), radius * 2, radius * 2, 180, -90);
+
+    painter->fillPath(path, painter->brush());
+    painter->drawPath(path);
+}
+
+
+void Widget::drawRoundedRectTopRight(QPainter *painter, const QRect &rect, int radius)
+{
+    QPainterPath path;
+
+    QRect cornerRect(rect.right() - 2 * radius, rect.top(),
+                     2 * radius, 2 * radius);
+    path.arcTo(cornerRect, 90, -90);
+
+    // 添加其余部分
+    path.lineTo(rect.right(), rect.bottom());
+    path.lineTo(rect.left(), rect.bottom());
+    path.lineTo(rect.left(), rect.top());
+    path.lineTo(rect.right() - radius, rect.top());
+
+    painter->fillPath(path, painter->brush());
+    painter->drawPath(path);
+}
+
 
 void Widget::resizeEvent(QResizeEvent *e)
 {
@@ -219,20 +290,20 @@ void Widget::initData()
                  (ui->label->geometry().y() +  ui->label->height() * 0.38), ui->label->width() * 0.043, ui->label->height() * 0.18);
     m_areaMap.insert(6, rect);
     //右边臀部
-    rect = QRect((ui->label->geometry().x() +  ui->label->width() * 0.37) ,
-                 (ui->label->geometry().y() +  ui->label->height() * 0.61), ui->label->width() * 0.175, ui->label->height() * 0.11);
+    rect = QRect((ui->label->geometry().x() +  ui->label->width() * 0.377) ,
+                 (ui->label->geometry().y() +  ui->label->height() * 0.61), ui->label->width() * 0.168, ui->label->height() * 0.11);
     m_areaMap.insert(7, rect);
     //左边臀部
-    rect = QRect((ui->label->geometry().x() +  ui->label->width() * 0.55) ,
-                 (ui->label->geometry().y() +  ui->label->height() * 0.61), ui->label->width() * 0.175, ui->label->height() * 0.11);
+    rect = QRect((ui->label->geometry().x() +  ui->label->width() * 0.548) ,
+                 (ui->label->geometry().y() +  ui->label->height() * 0.61), ui->label->width() * 0.168, ui->label->height() * 0.11);
     m_areaMap.insert(8, rect);
     //右腿
-    rect = QRect((ui->label->geometry().x() +  ui->label->width() * 0.34) ,
-                 (ui->label->geometry().y() +  ui->label->height() * 0.725), ui->label->width() * 0.195, ui->label->height() * 0.11);
+    rect = QRect((ui->label->geometry().x() +  ui->label->width() * 0.35) ,
+                 (ui->label->geometry().y() +  ui->label->height() * 0.725), ui->label->width() * 0.19, ui->label->height() * 0.09);
     m_areaMap.insert(1, rect);
     //左腿
-    rect = QRect((ui->label->geometry().x() +  ui->label->width() * 0.55) ,
-                 (ui->label->geometry().y() +  ui->label->height() * 0.725), ui->label->width() * 0.195, ui->label->height() * 0.11);
+    rect = QRect((ui->label->geometry().x() +  ui->label->width() * 0.549) ,
+                 (ui->label->geometry().y() +  ui->label->height() * 0.725), ui->label->width() * 0.19, ui->label->height() * 0.09);
     m_areaMap.insert(2, rect);
 
     for(int i=0; i<9; ++i)

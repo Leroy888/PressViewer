@@ -48,6 +48,8 @@ protected:
     void initAnimMap();
     void repaintColor();
 
+    void drawRoundedRectTopLeft(QPainter *painter, const QRect &rect, int radius);
+    void drawRoundedRectTopRight(QPainter *painter, const QRect &rect, int radius);
 protected slots:
     void onTimeout();
     void onAnimationValueChanged(const QVariant& value);

@@ -148,14 +148,13 @@ void SerialWorker::parsePacketData(const QByteArray& strData)
     {
         int colNum = 12;
         int nColmn = m_stParam.indexMap.value(i);
-        if (2 == i)
+        if (1 == i || 2 == i)
         {
             int value = PublicFunc::getValue(strData[i * colNum * 2 + nColmn * 2 + index], strData[i * colNum * 2 + nColmn * 2 + 1 + index]);
            // qDebug()<<"1 row value:"<<value;
             value = value < 100 ? 100 : value;
             value = value > 700 ? 700 : value;
             m_valueMap.insert(i, value);
-            m_valueMap.insert(1, value);
         }
         else if (3 == i)
         {
@@ -202,7 +201,7 @@ void SerialWorker::parsePacketData(const QByteArray& strData)
             value = value > 700 ? 700 : value;
             m_valueMap.insert(i, value);
         }
-        else if (1 == i || 4 == i)
+        else if (4 == i)
             continue;
         else
         {
